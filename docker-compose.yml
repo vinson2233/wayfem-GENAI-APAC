@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  calendar-mcp:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8003"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    environment:
+      - HOST=0.0.0.0
+    command: python mcp_servers/calendar_server.py
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - calendar-mcp
+    environment:
+      - CALENDAR_MCP_URL=http://calendar-mcp:8003/mcp
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000

@@ -1,0 +1,25 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Backend
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/.env
+backend/venv/
+backend/.venv/
+*.egg-info/
+
+# Google credentials
+*.json
+!backend/.env.example
+
+# Vite cache
+.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
