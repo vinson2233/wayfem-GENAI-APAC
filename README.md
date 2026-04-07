@@ -14,7 +14,7 @@ Wayfem uses four specialized AI agents (powered by Vertex AI Gemini) to analyze 
 ```
 User Request (REST API)
         ↓
-Orchestrator [Gemini 1.5 Pro + LangGraph]
+Orchestrator [Gemini 3.1 Flash-Lite (Preview) + LangGraph]
  ├── Safety Intelligence Agent  → travel advisories, crime reports (with sources)
  ├── Accommodation Agent        → hotels scored by Female Friendliness Index
  ├── Community Agent            → tips from women who've traveled there
@@ -179,7 +179,7 @@ curl -X POST https://wayfem-app-3oetgfjgkq-uc.a.run.app/api/v1/plan \
 
 ## Agent Architecture
 
-### Orchestrator (Gemini 1.5 Pro)
+### Orchestrator (Gemini 3.1 Flash-Lite (Preview))
 LangGraph `StateGraph` with parallel fan-out:
 1. **parse_request** — geocode destination via Google Maps MCP, generate trip ID
 2. **[PARALLEL]** safety_check + hotel_search + community_lookup
