@@ -12,6 +12,8 @@
 Wayfem uses four specialized AI agents (powered by Vertex AI Gemini) to analyze safety conditions, find female-friendly accommodations, build safe itineraries, and surface community wisdom — all orchestrated via a LangGraph parallel workflow.
 
 ```
+
+![](app_preview.png)
 User Request (REST API)
         ↓
 Orchestrator [Gemini 3.1 Flash-Lite (Preview) + LangGraph]
