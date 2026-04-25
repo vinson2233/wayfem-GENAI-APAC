@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Search, Calendar, Phone, ChevronRight, AlertTriangle, Star, Users, Zap } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import { useTripPlan, PROGRESS_STEPS } from '../hooks/useTripPlan'
 
 export default function HomePage() {
@@ -49,7 +49,6 @@ export default function HomePage() {
     }
   }
 
-  // Rotate detail messages within each active step
   useEffect(() => {
     if (!loading) return
     const currentDetails = PROGRESS_STEPS[progressStep]?.details ?? []
@@ -61,282 +60,358 @@ export default function HomePage() {
   }, [loading, progressStep])
 
   return (
-    <div className="min-h-screen -mt-6 -mx-4 sm:-mx-6">
-      {/* ── Full-bleed hero ── */}
-      <div
-        className="relative min-h-[520px] flex flex-col justify-center items-center px-4 pt-24 pb-32 text-center"
-        style={{
-          backgroundImage:
-            "linear-gradient(to bottom, rgba(15,10,30,0.7) 0%, rgba(80,20,80,0.6) 100%), url('https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1600&q=80')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-white/80 text-sm font-medium">
-            <Shield size={14} className="text-safeher-300" />
-            AI-Powered Travel Safety
-          </div>
+    <div className="bg-cream-50">
+      {/* ════════════════════════════════════════════════════════
+            HERO — Editorial split with massive serif type
+         ════════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden">
+        {/* Soft pink atmosphere */}
+        <div className="blossom w-[520px] h-[520px] bg-rose-100 -top-40 -left-32 animate-drift" />
+        <div className="blossom w-[420px] h-[420px] bg-rose-200 top-32 right-0 opacity-40" />
+        <div className="noise" />
 
-          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.1]">
-            <span
-              className="bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(135deg, #f472b6 0%, #c084fc 100%)' }}
-            >
-              Travel Safe.
+        <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 pt-16 pb-24">
+          {/* Top meta strip */}
+          <div className="flex items-baseline justify-between mb-12 reveal reveal-1">
+            <span className="eyebrow">№ 001 · Issue One</span>
+            <span className="text-xs font-display italic text-ink-300">
+              Tuesday, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </span>
-            <br />
-            <span className="text-white">Travel Free.</span>
-          </h1>
-
-          <p className="text-white/75 text-lg max-w-md mx-auto leading-relaxed">
-            AI-powered safety intelligence designed for women traveling solo
-          </p>
-
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-3 pt-1">
-            {[
-              { icon: '🛡', label: 'Real-time Threat Analysis' },
-              { icon: '🏨', label: 'Female-Friendly Hotels' },
-              { icon: '👭', label: 'Community Wisdom' },
-            ].map(badge => (
-              <span
-                key={badge.label}
-                className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3.5 py-1.5 text-white/90 text-sm font-medium"
-              >
-                <span>{badge.icon}</span>
-                {badge.label}
-              </span>
-            ))}
           </div>
-        </div>
-      </div>
 
-      {/* ── Floating form card ── */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4 -mt-16">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 sm:p-8">
-          {!loading ? (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <h2 className="text-xl font-bold text-gray-900">Where are you headed?</h2>
+          <div className="grid lg:grid-cols-12 gap-8 items-start">
+            {/* Left column — headline */}
+            <div className="lg:col-span-7 space-y-8">
+              <h1 className="reveal reveal-2 display text-[14vw] sm:text-[10vw] lg:text-[8.5rem] xl:text-[10rem] leading-[0.85] text-ink-500">
+                <span className="block">Travel</span>
+                <span className="block">
+                  <em className="font-normal text-rose-500" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
+                    safer,
+                  </em>
+                </span>
+                <span className="block">travel</span>
+                <span className="block flex items-baseline gap-4">
+                  <em className="font-normal text-rose-500" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
+                    freer.
+                  </em>
+                  <span className="text-rose-300 text-3xl lg:text-5xl">✦</span>
+                </span>
+              </h1>
 
-              {/* Destination */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Destination</label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={destination}
-                    onChange={e => setDestination(e.target.value)}
-                    placeholder="e.g. Tokyo, Japan"
-                    required
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300 focus:border-transparent placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
-                  <div className="relative">
-                    <Calendar size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      required
-                      className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date</label>
-                  <div className="relative">
-                    <Calendar size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={e => setEndDate(e.target.value)}
-                      required
-                      className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Emergency Contact */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Emergency Contact
-                  <span className="text-gray-400 font-normal ml-1">(optional)</span>
-                </label>
-                <div className="relative">
-                  <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={emergencyContact}
-                    onChange={e => setEmergencyContact(e.target.value)}
-                    placeholder="Name or phone number"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300 focus:border-transparent placeholder:text-gray-400"
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-1 ml-1">We'll create check-in reminders tied to this contact</p>
-              </div>
-
-              {/* Preferences */}
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2.5">Preferences</p>
-                <div className="space-y-2.5">
-                  {[
-                    { label: 'Female-only accommodations', value: femaleOnly, onChange: setFemaleOnly },
-                    { label: 'Avoid nightlife areas', value: avoidNightlife, onChange: setAvoidNightlife },
-                    { label: 'Budget travel', value: budgetTravel, onChange: setBudgetTravel },
-                  ].map(pref => (
-                    <label key={pref.label} className="flex items-center gap-3 cursor-pointer group">
-                      <div
-                        onClick={() => pref.onChange(!pref.value)}
-                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${
-                          pref.value ? 'bg-safeher-500 border-safeher-500' : 'border-gray-300 group-hover:border-safeher-300'
-                        }`}
-                      >
-                        {pref.value && (
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-600 select-none">{pref.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Error */}
-              {error && (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3">
-                  <AlertTriangle size={15} className="text-red-500 shrink-0" />
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={!destination || !startDate || !endDate}
-                className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-semibold rounded-xl hover:from-rose-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-pink-200 text-base"
-              >
-                Plan My Safe Trip →
-                <ChevronRight size={18} />
-              </button>
-            </form>
-          ) : (
-            <div className="py-10 text-center space-y-6">
-              <div className="flex justify-center">
-                <div className="relative w-20 h-20">
-                  <div className="absolute inset-0 rounded-full border-4 border-safeher-100 border-t-safeher-500 animate-spin" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Shield size={28} className="text-safeher-500" />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Multi-agent AI analyzing {destination}…</h3>
-                <p className="text-sm text-gray-500">This usually takes 15–30 seconds</p>
-              </div>
-
-              {/* Active step detail ticker */}
-              <div className="bg-safeher-50 border border-safeher-100 rounded-xl px-4 py-3 max-w-sm mx-auto min-h-[56px]">
-                <p className="text-xs font-semibold text-safeher-600 uppercase tracking-wide mb-1">
-                  {PROGRESS_STEPS[progressStep]?.agent}
-                </p>
-                <p className="text-sm text-safeher-800 transition-all duration-300">
-                  ⚡ {PROGRESS_STEPS[progressStep]?.details[detailIdx]}
+              <div className="reveal reveal-3 flex items-start gap-6 max-w-2xl">
+                <span className="hidden sm:block w-12 h-px bg-rose-400 mt-3 shrink-0" />
+                <p className="text-lg lg:text-xl text-ink-400 leading-relaxed">
+                  An <em className="font-display text-ink-500">opinionated</em> travel
+                  companion that scans threats, vets accommodations, and pairs you with
+                  women who've walked the same streets — so you can wander without flinching.
                 </p>
               </div>
 
-              <div className="space-y-3 text-left max-w-sm mx-auto w-full">
-                {PROGRESS_STEPS.map((step, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-start gap-3 text-sm transition-all duration-500 ${
-                      idx <= progressStep ? 'opacity-100' : 'opacity-25'
-                    }`}
-                  >
-                    <div
-                      className={`w-5 h-5 rounded-full shrink-0 mt-0.5 flex items-center justify-center ${
-                        idx < progressStep
-                          ? 'bg-green-500'
-                          : idx === progressStep
-                          ? 'bg-safeher-500 animate-pulse'
-                          : 'bg-gray-200'
-                      }`}
-                    >
-                      {idx < progressStep && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <p className={`font-medium ${idx <= progressStep ? 'text-gray-800' : 'text-gray-400'}`}>
-                        {step.label}
-                      </p>
-                      {idx < progressStep && (
-                        <p className="text-xs text-green-600 mt-0.5">✓ Complete</p>
-                      )}
-                    </div>
+              {/* Stat strip */}
+              <div className="reveal reveal-4 grid grid-cols-3 gap-6 max-w-2xl pt-6 border-t border-[var(--hairline)]">
+                {[
+                  { num: '4', label: 'AI agents', sub: 'in concert' },
+                  { num: '120+', label: 'Cities', sub: 'mapped' },
+                  { num: '24/7', label: 'Check-ins', sub: 'always on' },
+                ].map(stat => (
+                  <div key={stat.label}>
+                    <p className="display text-4xl lg:text-5xl text-ink-500 mb-1">{stat.num}</p>
+                    <p className="eyebrow">{stat.label}</p>
+                    <p className="text-xs text-ink-300 italic font-display mt-0.5">{stat.sub}</p>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* ── How it works ── */}
-      <div className="max-w-4xl mx-auto px-4 py-16 sm:py-20">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">How Wayfem works</h2>
-          <p className="text-gray-500 text-base">Three steps from destination to confident journey</p>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-6">
-          {[
-            {
-              icon: <Zap size={22} className="text-safeher-500" />,
-              title: 'Safety Intelligence',
-              desc: 'We scan travel advisories, crime reports, and real-time alerts specific to women.',
-              emoji: '🔍',
-            },
-            {
-              icon: <Star size={22} className="text-safeher-500" />,
-              title: 'Curated Hotels',
-              desc: 'Hotels scored by our Female Friendliness Index (FFI) — safety first.',
-              emoji: '🏨',
-            },
-            {
-              icon: <Users size={22} className="text-safeher-500" />,
-              title: 'Smart Itinerary',
-              desc: 'Day-by-day schedule that avoids unsafe hours and flags risks in advance.',
-              emoji: '📅',
-            },
-          ].map(card => (
-            <div
-              key={card.title}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md transition-shadow"
-            >
-              <div className="w-12 h-12 rounded-xl bg-safeher-50 flex items-center justify-center text-2xl">
-                {card.emoji}
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900 mb-1">{card.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
+            {/* Right column — Form (or progress) */}
+            <div className="lg:col-span-5 reveal reveal-5">
+              <div className="paper-card p-8 lg:p-10 lg:sticky lg:top-32">
+                {!loading ? (
+                  <form onSubmit={handleSubmit} className="space-y-7">
+                    <div className="flex items-baseline justify-between">
+                      <p className="section-number">i.</p>
+                      <p className="eyebrow">Begin</p>
+                    </div>
+
+                    <h2 className="display text-3xl text-ink-500 leading-tight">
+                      Where shall we
+                      <em className="text-rose-500 font-normal"> wander</em>?
+                    </h2>
+
+                    <div className="space-y-6">
+                      <label className="block">
+                        <span className="num-tag block mb-1">01 · destination</span>
+                        <input
+                          type="text"
+                          value={destination}
+                          onChange={e => setDestination(e.target.value)}
+                          placeholder="Tokyo, Japan"
+                          required
+                          className="field"
+                          autoFocus
+                        />
+                      </label>
+
+                      <div className="grid grid-cols-2 gap-6">
+                        <label className="block">
+                          <span className="num-tag block mb-1">02 · departing</span>
+                          <input
+                            type="date"
+                            value={startDate}
+                            onChange={e => setStartDate(e.target.value)}
+                            required
+                            className="field"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="num-tag block mb-1">03 · returning</span>
+                          <input
+                            type="date"
+                            value={endDate}
+                            onChange={e => setEndDate(e.target.value)}
+                            required
+                            className="field"
+                          />
+                        </label>
+                      </div>
+
+                      <label className="block">
+                        <span className="num-tag block mb-1">04 · emergency contact <span className="text-ink-300/70 italic">(optional)</span></span>
+                        <input
+                          type="text"
+                          value={emergencyContact}
+                          onChange={e => setEmergencyContact(e.target.value)}
+                          placeholder="A name or phone number we can lean on"
+                          className="field"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="pt-2">
+                      <p className="num-tag mb-3">05 · preferences</p>
+                      <div className="space-y-2">
+                        {[
+                          { label: 'Female-only accommodations', value: femaleOnly, onChange: setFemaleOnly },
+                          { label: 'Avoid nightlife districts', value: avoidNightlife, onChange: setAvoidNightlife },
+                          { label: 'Budget conscious', value: budgetTravel, onChange: setBudgetTravel },
+                        ].map(pref => (
+                          <button
+                            key={pref.label}
+                            type="button"
+                            onClick={() => pref.onChange(!pref.value)}
+                            className="w-full flex items-center gap-3 py-2 group text-left"
+                          >
+                            <span className={`pretty-check ${pref.value ? 'checked' : ''}`}>
+                              {pref.value && <Check size={11} className="text-cream-50" strokeWidth={3} />}
+                            </span>
+                            <span className={`text-sm transition-colors ${pref.value ? 'text-ink-500 font-medium' : 'text-ink-400 group-hover:text-ink-500'}`}>
+                              {pref.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {error && (
+                      <p className="text-sm text-rose-700 bg-rose-50 border-l-2 border-rose-500 px-3 py-2 italic font-display">
+                        {error}
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={!destination || !startDate || !endDate}
+                      className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base"
+                    >
+                      <span>Plan my trip</span>
+                      <ArrowUpRight size={18} className="transition-transform group-hover:translate-x-0.5" />
+                    </button>
+
+                    <p className="text-[11px] text-ink-300 text-center italic font-display">
+                      Takes ~25 seconds · four agents in concert
+                    </p>
+                  </form>
+                ) : (
+                  <div className="py-6 space-y-7">
+                    <div className="flex items-baseline justify-between">
+                      <p className="section-number">ii.</p>
+                      <p className="eyebrow">Mapping</p>
+                    </div>
+
+                    <div>
+                      <h3 className="display text-3xl text-ink-500 leading-tight">
+                        Listening to
+                        <em className="text-rose-500 font-normal"> {destination || 'your destination'}</em>…
+                      </h3>
+                      <p className="text-sm text-ink-300 italic font-display mt-2">
+                        Four agents are reading advisories, scoring stays, and gathering whispers from the community.
+                      </p>
+                    </div>
+
+                    {/* Active step ticker */}
+                    <div className="bg-rose-50 border-l-2 border-rose-500 px-5 py-4 min-h-[72px]">
+                      <p className="num-tag text-rose-700 mb-1">
+                        {String(progressStep + 1).padStart(2, '0')} · {PROGRESS_STEPS[progressStep]?.agent}
+                      </p>
+                      <p className="text-sm text-ink-500 italic font-display transition-all duration-300">
+                        {PROGRESS_STEPS[progressStep]?.details[detailIdx]}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {PROGRESS_STEPS.map((step, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-baseline gap-4 transition-all duration-500 ${
+                            idx <= progressStep ? 'opacity-100' : 'opacity-30'
+                          }`}
+                        >
+                          <span className={`num-tag w-8 shrink-0 ${idx <= progressStep ? 'text-rose-500' : ''}`}>
+                            {idx < progressStep ? '✓' : String(idx + 1).padStart(2, '0')}
+                          </span>
+                          <div className="flex-1">
+                            <p className={`text-sm font-medium ${idx <= progressStep ? 'text-ink-500' : 'text-ink-300'}`}>
+                              {step.label}
+                            </p>
+                            {idx === progressStep && (
+                              <div className="mt-1 h-px bg-gradient-to-r from-rose-500 via-rose-300 to-transparent" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════
+            EDITORIAL DIVIDER — pull quote
+         ════════════════════════════════════════════════════════ */}
+      <section className="border-y border-[var(--hairline)] bg-rose-50/40 py-20 lg:py-28">
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-12 text-center">
+          <p className="asterism mb-8" />
+          <blockquote className="display text-3xl sm:text-4xl lg:text-5xl text-ink-500 leading-[1.1] tracking-tight">
+            "Travel is the only thing you buy that makes you{' '}
+            <em className="font-normal text-rose-500">richer</em>.
+            Safety is the only thing that lets you{' '}
+            <em className="font-normal text-rose-500">go</em>."
+          </blockquote>
+          <p className="num-tag mt-8">— editor's note</p>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════
+            HOW IT WORKS — three column editorial
+         ════════════════════════════════════════════════════════ */}
+      <section className="max-w-[1320px] mx-auto px-6 lg:px-12 py-24 lg:py-32">
+        <div className="grid lg:grid-cols-12 gap-12 mb-16">
+          <div className="lg:col-span-4">
+            <p className="eyebrow mb-3">№ 002 · The method</p>
+            <h2 className="display text-5xl lg:text-6xl text-ink-500 leading-[0.95]">
+              Four agents,
+              <br />
+              <em className="text-rose-500 font-normal">one</em> verdict.
+            </h2>
+          </div>
+          <div className="lg:col-span-7 lg:col-start-6 self-end">
+            <p className="text-lg text-ink-400 leading-relaxed">
+              Behind every itinerary is a coordinated dance of specialized agents.
+              Each one scrutinizes a different layer — threats, stays, schedules,
+              community wisdom — then they confer. What you receive is the consensus,
+              with every flag traced back to its source.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+          {[
+            {
+              num: '01',
+              label: 'Safety Agent',
+              title: 'Reads what the world says',
+              body: 'Pulls travel advisories, recent incidents, and women-specific reports. Sources every flag.',
+              accent: '🛡',
+            },
+            {
+              num: '02',
+              label: 'Stays Agent',
+              title: 'Vets every doorway',
+              body: 'Scores hotels by our Female Friendliness Index — door security, lobby visibility, the things that matter.',
+              accent: '🏛',
+            },
+            {
+              num: '03',
+              label: 'Schedule Agent',
+              title: 'Keeps a curfew you set',
+              body: 'Builds a day-by-day plan that respects safe-return times. Critical hours flagged in red.',
+              accent: '◷',
+            },
+          ].map((card, i) => (
+            <article key={card.num} className={`group ${i === 1 ? 'md:translate-y-8' : ''}`}>
+              <div className="flex items-start justify-between mb-8 pb-4 border-b border-[var(--hairline-strong)]">
+                <span className="num-tag">{card.num}</span>
+                <span className="text-3xl text-rose-400 transition-transform group-hover:rotate-12">{card.accent}</span>
+              </div>
+              <p className="eyebrow text-rose-700 mb-3">{card.label}</p>
+              <h3 className="display text-3xl text-ink-500 mb-4 leading-tight">{card.title}</h3>
+              <p className="text-ink-400 leading-relaxed">{card.body}</p>
+            </article>
           ))}
         </div>
-      </div>
+
+        {/* Fourth, full-width card — community */}
+        <article className="mt-12 group relative overflow-hidden">
+          <div className="paper-card p-10 lg:p-14 grid md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-2">
+              <span className="num-tag block mb-2">04</span>
+              <span className="text-5xl text-rose-400">❀</span>
+            </div>
+            <div className="md:col-span-7">
+              <p className="eyebrow text-rose-700 mb-3">Community Agent</p>
+              <h3 className="display text-3xl lg:text-4xl text-ink-500 mb-3 leading-tight">
+                Listens to the women who've already been there.
+              </h3>
+              <p className="text-ink-400 leading-relaxed">
+                Real tips from real travelers — categorized by transport, lodging, nightlife, food, and emergencies.
+                When the dataset is thin, the agent generates context-aware starters and invites the community to refine them.
+              </p>
+            </div>
+            <div className="md:col-span-3 md:text-right">
+              <a className="link-underline text-ink-500 font-medium">Browse community →</a>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════
+            CALL — closing
+         ════════════════════════════════════════════════════════ */}
+      <section className="bg-ink-500 text-cream-50 py-24 lg:py-32 relative overflow-hidden">
+        <div className="blossom w-[400px] h-[400px] bg-rose-500 -bottom-32 -right-20 opacity-30" />
+        <div className="max-w-[1100px] mx-auto px-6 lg:px-12 text-center relative">
+          <p className="eyebrow text-rose-300 mb-6">№ 003 · The invitation</p>
+          <h2 className="display text-5xl sm:text-6xl lg:text-7xl text-cream-50 leading-[0.95] tracking-tight">
+            Pack lighter.
+            <br />
+            Worry <em className="font-normal text-rose-300">less</em>.
+          </h2>
+          <p className="text-cream-50/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
+            The world has more rooms with safe locks than you've been told.
+            We'll help you find them.
+          </p>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="mt-12 inline-flex items-center gap-3 px-8 py-4 bg-cream-50 text-ink-500 rounded-full font-medium hover:bg-rose-100 transition-colors"
+          >
+            Plan a trip
+            <ArrowUpRight size={18} />
+          </button>
+        </div>
+      </section>
     </div>
   )
 }
-

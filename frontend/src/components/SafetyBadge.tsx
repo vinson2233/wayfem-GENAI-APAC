@@ -1,5 +1,5 @@
 import type { ThreatLevel } from '../api/client'
-import { CheckCircle, AlertTriangle, AlertOctagon, Info, Lightbulb } from 'lucide-react'
+import { AlertTriangle, AlertOctagon, Info, Lightbulb, Check } from 'lucide-react'
 
 interface SafetyBadgeProps {
   threat_level: ThreatLevel
@@ -7,50 +7,45 @@ interface SafetyBadgeProps {
 }
 
 export default function SafetyBadge({ threat_level, size = 'md' }: SafetyBadgeProps) {
-  const iconSize = size === 'lg' ? 18 : size === 'md' ? 15 : 12
-
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5 gap-1',
-    md: 'text-sm px-3 py-1 gap-1.5',
-    lg: 'text-base px-4 py-2 gap-2',
+    sm: 'text-[10px] px-2.5 py-1',
+    md: 'text-[11px] px-3 py-1.5',
+    lg: 'text-xs px-4 py-2',
   }
 
-  if (threat_level === 'LOW') {
-    return (
-      <span className={`inline-flex items-center font-bold rounded-full bg-green-500 text-white ${sizeClasses[size]}`}>
-        <CheckCircle size={iconSize} />
-        ✓ LOW RISK
-      </span>
-    )
+  const config: Record<ThreatLevel, { dot: string; label: string; sub: string; cls: string }> = {
+    LOW: {
+      dot: 'bg-green-500',
+      label: 'Low',
+      sub: '· generally safe',
+      cls: 'border-green-200 bg-green-50/50 text-green-900',
+    },
+    MEDIUM: {
+      dot: 'bg-amber-500',
+      label: 'Medium',
+      sub: '· stay aware',
+      cls: 'border-amber-200 bg-amber-50/50 text-amber-900',
+    },
+    HIGH: {
+      dot: 'bg-orange-500',
+      label: 'High',
+      sub: '· proceed with care',
+      cls: 'border-orange-300 bg-orange-50/60 text-orange-900',
+    },
+    CRITICAL: {
+      dot: 'bg-rose-700',
+      label: 'Critical',
+      sub: '· do not travel',
+      cls: 'border-rose-700 bg-rose-700 text-white',
+    },
   }
 
-  if (threat_level === 'MEDIUM') {
-    return (
-      <span className={`inline-flex items-center font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300 ${sizeClasses[size]}`}>
-        <AlertTriangle size={iconSize} />
-        <span>
-          MEDIUM RISK
-          <span className="font-normal text-amber-600 ml-1">(Use caution)</span>
-        </span>
-      </span>
-    )
-  }
+  const c = config[threat_level]
 
-  if (threat_level === 'HIGH') {
-    return (
-      <span className={`inline-flex items-center font-bold rounded-full bg-orange-100 text-orange-800 border border-orange-300 ring-2 ring-orange-400 ring-offset-1 ${sizeClasses[size]}`}>
-        <AlertTriangle size={iconSize} />
-        HIGH RISK
-      </span>
-    )
-  }
-
-  // CRITICAL
   return (
-    <span className={`relative inline-flex items-center font-bold rounded-full bg-red-600 text-white border border-red-700 ${sizeClasses[size]}`}>
-      <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-40" />
-      <AlertOctagon size={iconSize} className="relative" />
-      <span className="relative">🚨 DO NOT TRAVEL</span>
+    <span className={`inline-flex items-center gap-2 uppercase tracking-[0.18em] font-semibold rounded-full border ${c.cls} ${sizeClasses[size]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dot} ${threat_level === 'CRITICAL' ? 'animate-pulse bg-white' : ''}`} />
+      <span>{c.label} <span className="font-normal italic font-display normal-case tracking-normal opacity-80">{c.sub}</span></span>
     </span>
   )
 }
@@ -60,39 +55,39 @@ type RemarkType = 'warning' | 'tip' | 'info' | 'danger' | 'success'
 export function RemarkBadge({ type, children }: { type: RemarkType; children: React.ReactNode }) {
   const configs: Record<RemarkType, { wrapper: string; icon: React.ReactNode; label: string }> = {
     warning: {
-      wrapper: 'bg-amber-50 border border-amber-200 text-amber-800',
+      wrapper: 'bg-amber-50/70 border-l-2 border-amber-400 text-amber-900',
       icon: <AlertTriangle size={13} className="text-amber-500 shrink-0 mt-0.5" />,
-      label: '⚠ Warning',
+      label: 'Warning',
     },
     tip: {
-      wrapper: 'bg-blue-50 border border-blue-200 text-blue-800',
-      icon: <Lightbulb size={13} className="text-blue-500 shrink-0 mt-0.5" />,
-      label: '💡 Tip',
+      wrapper: 'bg-rose-50/60 border-l-2 border-rose-400 text-rose-800',
+      icon: <Lightbulb size={13} className="text-rose-500 shrink-0 mt-0.5" />,
+      label: 'Tip',
     },
     info: {
-      wrapper: 'bg-indigo-50 border border-indigo-200 text-indigo-800',
-      icon: <Info size={13} className="text-indigo-500 shrink-0 mt-0.5" />,
-      label: 'ℹ Info',
+      wrapper: 'bg-cream-200/60 border-l-2 border-ink-300 text-ink-500',
+      icon: <Info size={13} className="text-ink-300 shrink-0 mt-0.5" />,
+      label: 'Note',
     },
     danger: {
-      wrapper: 'bg-red-50 border border-red-200 text-red-800',
-      icon: <AlertOctagon size={13} className="text-red-500 shrink-0 mt-0.5" />,
-      label: '🚨 Alert',
+      wrapper: 'bg-rose-100 border-l-2 border-rose-700 text-rose-800',
+      icon: <AlertOctagon size={13} className="text-rose-700 shrink-0 mt-0.5" />,
+      label: 'Alert',
     },
     success: {
-      wrapper: 'bg-green-50 border border-green-200 text-green-800',
-      icon: <CheckCircle size={13} className="text-green-500 shrink-0 mt-0.5" />,
-      label: '✓ Safe',
+      wrapper: 'bg-green-50/70 border-l-2 border-green-500 text-green-900',
+      icon: <Check size={13} className="text-green-600 shrink-0 mt-0.5" />,
+      label: 'Safe',
     },
   }
 
   const { wrapper, icon, label } = configs[type]
 
   return (
-    <div className={`flex gap-2 rounded-lg px-3 py-2 text-xs ${wrapper}`}>
+    <div className={`flex gap-2.5 px-4 py-2.5 text-xs leading-relaxed ${wrapper}`}>
       {icon}
       <span>
-        <span className="font-semibold mr-1">{label}:</span>
+        <span className="font-semibold uppercase tracking-[0.14em] text-[10px] mr-2">{label}</span>
         {children}
       </span>
     </div>

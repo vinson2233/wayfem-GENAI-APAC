@@ -4,7 +4,7 @@ interface SafetyScoreRingProps {
 }
 
 export default function SafetyScoreRing({ score, size = 120 }: SafetyScoreRingProps) {
-  const radius = (size - 20) / 2
+  const radius = (size - 16) / 2
   const circumference = 2 * Math.PI * radius
   const clampedScore = Math.max(0, Math.min(10, score))
   const progress = clampedScore / 10
@@ -14,22 +14,13 @@ export default function SafetyScoreRing({ score, size = 120 }: SafetyScoreRingPr
     clampedScore >= 8
       ? '#16a34a'
       : clampedScore >= 5
-      ? '#ca8a04'
+      ? '#cf6f68'
       : clampedScore >= 3
-      ? '#ea580c'
-      : '#dc2626'
-
-  const textColor =
-    clampedScore >= 8
-      ? 'text-green-700'
-      : clampedScore >= 5
-      ? 'text-yellow-700'
-      : clampedScore >= 3
-      ? 'text-orange-700'
-      : 'text-red-700'
+      ? '#a85049'
+      : '#7d3a36'
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90" viewBox={`0 0 ${size} ${size}`}>
           <circle
@@ -37,8 +28,8 @@ export default function SafetyScoreRing({ score, size = 120 }: SafetyScoreRingPr
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#e5e7eb"
-            strokeWidth="8"
+            stroke="#ece5e0"
+            strokeWidth="2"
           />
           <circle
             cx={size / 2}
@@ -46,19 +37,21 @@ export default function SafetyScoreRing({ score, size = 120 }: SafetyScoreRingPr
             r={radius}
             fill="none"
             stroke={color}
-            strokeWidth="8"
+            strokeWidth="3"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+            style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(0.16,1,0.3,1)' }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center rotate-0">
-          <span className={`text-2xl font-bold ${textColor}`}>{clampedScore.toFixed(1)}</span>
-          <span className="text-xs text-gray-400">/ 10</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-display text-[2.4rem] leading-none text-ink-500 tracking-tightest">
+            {clampedScore.toFixed(1)}
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-ink-300 mt-1">/ ten</span>
         </div>
       </div>
-      <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Safety Score</span>
+      <span className="text-[10px] uppercase tracking-[0.22em] text-ink-300">Safety index</span>
     </div>
   )
 }

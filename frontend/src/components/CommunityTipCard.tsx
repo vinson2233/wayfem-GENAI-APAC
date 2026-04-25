@@ -6,31 +6,22 @@ interface CommunityTipCardProps {
   tip: CommunityTip
 }
 
-const CATEGORY_ICONS: Record<CommunityTip['category'], string> = {
-  transport: '🚗',
-  accommodation: '🏨',
-  food: '🍽',
-  nightlife: '🌙',
-  emergency: '🚨',
-  general: '💡',
+const CATEGORY_GLYPH: Record<CommunityTip['category'], string> = {
+  transport: '✦',
+  accommodation: '❋',
+  food: '❍',
+  nightlife: '☾',
+  emergency: '⚠',
+  general: '✶',
 }
 
 const CATEGORY_LABELS: Record<CommunityTip['category'], string> = {
   transport: 'Transport',
-  accommodation: 'Accommodation',
+  accommodation: 'Stay',
   food: 'Food',
   nightlife: 'Nightlife',
   emergency: 'Emergency',
   general: 'General',
-}
-
-const CATEGORY_COLORS: Record<CommunityTip['category'], string> = {
-  transport: 'bg-blue-50 text-blue-700 border-blue-100',
-  accommodation: 'bg-purple-50 text-purple-700 border-purple-100',
-  food: 'bg-orange-50 text-orange-700 border-orange-100',
-  nightlife: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-  emergency: 'bg-red-50 text-red-700 border-red-100',
-  general: 'bg-yellow-50 text-yellow-700 border-yellow-100',
 }
 
 export default function CommunityTipCard({ tip }: CommunityTipCardProps) {
@@ -44,28 +35,35 @@ export default function CommunityTipCard({ tip }: CommunityTipCardProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-start gap-3">
-        <span className="text-2xl shrink-0">{CATEGORY_ICONS[tip.category]}</span>
+    <article className="group border-l-2 border-[var(--hairline)] hover:border-rose-500 pl-6 py-5 transition-colors">
+      <div className="flex items-start gap-5">
+        <span className="font-display text-3xl text-rose-400 shrink-0 leading-none mt-1">
+          {CATEGORY_GLYPH[tip.category]}
+        </span>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${CATEGORY_COLORS[tip.category]}`}>
-              {CATEGORY_LABELS[tip.category]}
-            </span>
+          <div className="flex items-baseline gap-3 mb-2 text-[10px] uppercase tracking-[0.16em] text-ink-300">
+            <span className="text-rose-700 font-semibold">{CATEGORY_LABELS[tip.category]}</span>
             {formattedDate && (
-              <span className="text-xs text-gray-400">{formattedDate}</span>
+              <>
+                <span className="text-rose-300">·</span>
+                <span className="italic font-display normal-case tracking-normal text-sm">{formattedDate}</span>
+              </>
             )}
           </div>
-          <p className="text-sm text-gray-700 leading-relaxed">{tip.tip}</p>
-          <div className="flex items-center justify-between mt-3">
-            <span className="text-xs text-gray-400 italic">— {tip.author_alias}</span>
-            <div className="flex items-center gap-1 text-safeher-500">
-              <Heart size={13} fill="currentColor" />
-              <span className="text-xs font-medium text-gray-600">{tip.upvotes}</span>
-            </div>
+
+          <p className="font-display text-lg text-ink-500 leading-snug tracking-tight mb-3">
+            "{tip.tip}"
+          </p>
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-ink-300 italic font-display">— {tip.author_alias}</span>
+            <button className="flex items-center gap-1.5 text-rose-500 hover:text-rose-700 transition-colors">
+              <Heart size={12} fill="currentColor" />
+              <span className="text-xs font-medium text-ink-400">{tip.upvotes}</span>
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }

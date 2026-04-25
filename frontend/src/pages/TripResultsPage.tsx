@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import { AlertTriangle, Phone, MapPin, Shield, AlertOctagon, CalendarPlus } from 'lucide-react'
+import { AlertTriangle, Phone, AlertOctagon, CalendarPlus } from 'lucide-react'
 import type { TripPlanResponse, ItineraryDay } from '../api/client'
 import SafetyBadge from '../components/SafetyBadge'
 import SafetyScoreRing from '../components/SafetyScoreRing'
@@ -10,7 +10,6 @@ import { format, parseISO } from 'date-fns'
 
 type Tab = 'itinerary' | 'hotels' | 'community' | 'safety'
 
-/** Generate and download an ICS file for the full itinerary. */
 function downloadItineraryICS(destination: string, itinerary: ItineraryDay[]) {
   const esc = (s: string) => s.replace(/[,;\\]/g, c => `\\${c}`).replace(/\n/g, '\\n')
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -79,68 +78,83 @@ export default function TripResultsPage() {
   const isHigh = sr.threat_level === 'HIGH'
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'itinerary', label: '📅 Itinerary' },
-    { key: 'hotels', label: '🏨 Hotels' },
-    { key: 'community', label: '👭 Community Tips' },
-    { key: 'safety', label: '🛡 Safety Report' },
+    { key: 'itinerary', label: 'Itinerary' },
+    { key: 'hotels', label: 'Stays' },
+    { key: 'community', label: 'Community' },
+    { key: 'safety', label: 'Safety' },
   ]
 
   const formatDate = (d: string) => {
-    try { return format(parseISO(d), 'MMM d, yyyy') } catch { return d }
+    try { return format(parseISO(d), 'MMM d') } catch { return d }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin size={18} className="text-safeher-500" />
-              <h1 className="text-2xl font-bold text-gray-900">{tripData.destination}</h1>
-            </div>
-            <p className="text-sm text-gray-500">
-              {formatDate(tripData.itinerary[0]?.date || '')} — {formatDate(tripData.itinerary[tripData.itinerary.length - 1]?.date || '')}
+    <div className="space-y-12">
+      {/* ════════════════════════════════════════════════
+            EDITORIAL TITLE BLOCK
+         ════════════════════════════════════════════════ */}
+      <header className="grid lg:grid-cols-12 gap-8 items-end pb-12 border-b border-[var(--hairline)]">
+        <div className="lg:col-span-8 space-y-5">
+          <div className="flex items-baseline gap-4">
+            <p className="eyebrow">Your trip ·</p>
+            <p className="num-tag">
+              {formatDate(tripData.itinerary[0]?.date || '')}
+              {' → '}
+              {formatDate(tripData.itinerary[tripData.itinerary.length - 1]?.date || '')}
             </p>
-            <div className="mt-2">
-              <SafetyBadge threat_level={sr.threat_level} size="md" />
-            </div>
           </div>
-          <SafetyScoreRing score={tripData.overall_safety_score} size={120} />
+          <h1 className="display text-6xl lg:text-8xl text-ink-500 leading-[0.9] tracking-tight">
+            {tripData.destination.split(',')[0]},
+            {tripData.destination.includes(',') && (
+              <>
+                <br />
+                <em className="text-rose-500 font-normal">{tripData.destination.split(',').slice(1).join(',').trim()}</em>
+              </>
+            )}
+          </h1>
+          <SafetyBadge threat_level={sr.threat_level} size="lg" />
         </div>
-      </div>
+        <div className="lg:col-span-4 flex lg:justify-end">
+          <SafetyScoreRing score={tripData.overall_safety_score} size={150} />
+        </div>
+      </header>
 
       {/* CRITICAL alert */}
       {isCritical && (
-        <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-6 animate-pulse">
-          <div className="flex items-center gap-3 mb-3">
-            <AlertOctagon size={28} className="text-red-600" />
-            <h2 className="text-xl font-bold text-red-800">DO NOT TRAVEL — Critical Risk Destination</h2>
+        <div className="bg-rose-700 text-cream-50 px-8 py-6 -mx-2 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-rose-700 via-rose-700 to-rose-800" />
+          <div className="relative flex items-start gap-4">
+            <AlertOctagon size={28} className="shrink-0 mt-1 animate-pulse" />
+            <div>
+              <p className="eyebrow text-rose-200 mb-2">Highest alert</p>
+              <h2 className="display text-3xl mb-2 leading-tight">
+                Do not travel to <em className="font-normal">{tripData.destination}</em>.
+              </h2>
+              <p className="text-cream-50/90 text-sm leading-relaxed">
+                Our agents have flagged this destination as critically unsafe for solo female travelers right now.
+                Please reconsider, and consult official advisories.
+              </p>
+            </div>
           </div>
-          <p className="text-red-700 mb-3">
-            Our AI safety agents have flagged <strong>{tripData.destination}</strong> as critically unsafe for solo female travelers at this time. We strongly advise against traveling here.
-          </p>
-          <p className="text-red-600 text-sm">Please consider an alternative destination or consult official government travel advisories before proceeding.</p>
         </div>
       )}
 
       {/* HIGH warning bar */}
       {isHigh && !isCritical && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-3 flex items-center gap-3">
-          <AlertTriangle size={20} className="text-orange-500 shrink-0" />
-          <p className="text-orange-800 font-medium text-sm">
-            ⚠ High Risk Destination — Proceed with caution and take all recommended safety precautions
+        <div className="bg-orange-50/70 border-l-2 border-orange-500 px-5 py-4 flex items-center gap-3">
+          <AlertTriangle size={18} className="text-orange-500 shrink-0" />
+          <p className="text-orange-900 text-sm leading-relaxed">
+            <span className="eyebrow text-orange-800 mr-2">High risk</span>
+            Proceed with care and follow every safety recommendation in this brief.
           </p>
         </div>
       )}
 
       {/* Risk Flags */}
       {tripData.risk_flags.length > 0 && (
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-1">
-            <AlertTriangle size={14} /> Risk Flags
-          </h3>
-          <ul className="space-y-3">
+        <section>
+          <p className="num-tag mb-4">i · what we flagged</p>
+          <ul className="space-y-4">
             {tripData.risk_flags.map((flag, i) => {
               const source = tripData.safety_report?.flag_sources?.[i]
               const isUrl = source?.startsWith('http')
@@ -154,7 +168,6 @@ export default function TripResultsPage() {
                 if (isUrl) {
                   try {
                     const host = new URL(source).hostname.replace(/^www\./, '')
-                    // Convert known domains to friendly names
                     const knownNames: Record<string, string> = {
                       'travel.state.gov': 'US State Department',
                       'gov.uk': 'UK FCDO',
@@ -172,21 +185,23 @@ export default function TripResultsPage() {
               }
 
               return (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <span className="text-amber-400 mt-0.5 shrink-0">⚠</span>
-                  <div className="leading-relaxed text-amber-800">
-                    {sourceName && (
-                      <span className="font-semibold">According to {sourceName}, </span>
-                    )}
-                    <span>{flag}</span>
+                <li key={i} className="flex items-baseline gap-4 border-b border-[var(--hairline)] pb-4">
+                  <span className="num-tag text-rose-500 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                  <div className="flex-1">
+                    <p className="font-display text-lg text-ink-500 leading-snug tracking-tight">
+                      {sourceName && (
+                        <span className="italic text-ink-300 mr-1">According to {sourceName},</span>
+                      )}
+                      {flag}
+                    </p>
                     {displayUrl && (
                       <a
                         href={displayUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 ml-2 text-xs text-amber-600 bg-amber-100 hover:bg-amber-200 hover:text-amber-900 px-2 py-0.5 rounded-full border border-amber-200 transition-colors cursor-pointer"
+                        className="link-underline inline-block mt-1.5 text-xs text-rose-700"
                       >
-                        🔗 source
+                        Read source →
                       </a>
                     )}
                   </div>
@@ -194,138 +209,140 @@ export default function TripResultsPage() {
               )
             })}
           </ul>
-        </div>
+        </section>
       )}
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="grid lg:grid-cols-12 gap-12">
         {/* Main content */}
-        <div className="flex-1 min-w-0">
+        <div className="lg:col-span-8 min-w-0">
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4 overflow-x-auto">
-            {tabs.map(tab => (
+          <nav className="flex gap-1 border-b border-[var(--hairline-strong)] mb-8 overflow-x-auto">
+            {tabs.map((tab, i) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 whitespace-nowrap text-sm font-medium px-3 py-2 rounded-lg transition-all ${
+                className={`relative whitespace-nowrap px-5 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-white text-safeher-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-ink-500'
+                    : 'text-ink-300 hover:text-ink-500'
                 }`}
               >
+                <span className="num-tag mr-2 text-rose-400">{String(i + 1).padStart(2, '0')}</span>
                 {tab.label}
+                {activeTab === tab.key && (
+                  <span className="absolute -bottom-[1px] left-0 right-0 h-px bg-rose-500" />
+                )}
               </button>
             ))}
-          </div>
+          </nav>
 
-          {/* Tab content */}
           {activeTab === 'itinerary' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {tripData.itinerary.length > 0 && (
                 <div className="flex justify-end">
                   <button
                     onClick={() => downloadItineraryICS(tripData.destination, tripData.itinerary)}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#1a73e8] hover:bg-[#1558b0] px-4 py-2 rounded-xl transition-colors shadow-sm"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-ink-500 link-underline"
                   >
-                    <CalendarPlus size={16} />
-                    Export All to Calendar (.ics)
+                    <CalendarPlus size={14} />
+                    Export to calendar (.ics)
                   </button>
                 </div>
               )}
               {tripData.itinerary.length > 0
                 ? tripData.itinerary.map(day => <ItineraryCard key={day.day_number} day={day} />)
-                : <p className="text-gray-500 text-sm text-center py-8">No itinerary available.</p>}
+                : <p className="text-ink-300 italic font-display text-center py-12">No itinerary available.</p>}
             </div>
           )}
 
           {activeTab === 'hotels' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {tripData.hotels.length > 0
                 ? tripData.hotels.map(hotel => <HotelCard key={hotel.place_id} hotel={hotel} />)
-                : <p className="text-gray-500 text-sm text-center py-8 col-span-2">No hotels found.</p>}
+                : <p className="text-ink-300 italic font-display text-center py-12 col-span-2">No hotels found.</p>}
             </div>
           )}
 
           {activeTab === 'community' && (
-            <div className="space-y-3">
+            <div className="space-y-1">
               {tripData.community_tips.length > 0
                 ? tripData.community_tips.map((tip, i) => (
-                    <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                      <p className="text-sm text-gray-700">💡 {tip}</p>
+                    <div key={i} className="border-l-2 border-rose-200 pl-6 py-4">
+                      <p className="font-display text-lg text-ink-500 leading-snug italic">"{tip}"</p>
                     </div>
                   ))
-                : <p className="text-gray-500 text-sm text-center py-8">No community tips available.</p>}
+                : <p className="text-ink-300 italic font-display text-center py-12">No community tips available.</p>}
             </div>
           )}
 
           {activeTab === 'safety' && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-800">Safety Overview</h3>
-                  <SafetyBadge threat_level={sr.threat_level} />
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed">{sr.summary}</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className={`flex items-center gap-2 p-3 rounded-lg ${sr.night_safety ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    <span>{sr.night_safety ? '✓' : '✗'}</span>
-                    <span className="text-sm font-medium">Night Safety</span>
-                  </div>
-                  <div className={`flex items-center gap-2 p-3 rounded-lg ${sr.transportation_safe ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    <span>{sr.transportation_safe ? '✓' : '✗'}</span>
-                    <span className="text-sm font-medium">Transportation</span>
-                  </div>
-                </div>
-                {sr.flags.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Flags</p>
-                    <div className="flex flex-wrap gap-1">
-                      {sr.flags.map((f, i) => (
-                        <span key={i} className="text-xs bg-orange-50 text-orange-700 border border-orange-100 px-2 py-0.5 rounded-full">
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {sr.local_laws_notes && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                    <p className="text-xs font-semibold text-blue-700 mb-1">Local Laws & Notes</p>
-                    <p className="text-sm text-blue-600">{sr.local_laws_notes}</p>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Shield size={14} className="text-safeher-500" />
-                  Emergency: <span className="font-semibold text-gray-700">{sr.emergency_number}</span>
-                </div>
-                {sr.last_updated && (
-                  <p className="text-xs text-gray-400">Last updated: {formatDate(sr.last_updated)}</p>
-                )}
+            <div className="space-y-8">
+              <div>
+                <p className="num-tag mb-3">i · the briefing</p>
+                <p className="font-display text-xl text-ink-500 leading-relaxed tracking-tight">{sr.summary}</p>
               </div>
+
+              <div className="grid grid-cols-2 gap-px bg-[var(--hairline)] border border-[var(--hairline)]">
+                {[
+                  { label: 'Night', ok: sr.night_safety, sub: sr.night_safety ? 'safe' : 'use caution' },
+                  { label: 'Transit', ok: sr.transportation_safe, sub: sr.transportation_safe ? 'safe' : 'careful' },
+                ].map(item => (
+                  <div key={item.label} className="bg-cream-50 p-5">
+                    <div className="flex items-baseline justify-between mb-1">
+                      <p className="num-tag">{item.label}</p>
+                      <span className={`w-2 h-2 rounded-full ${item.ok ? 'bg-green-500' : 'bg-rose-500'}`} />
+                    </div>
+                    <p className="font-display text-2xl text-ink-500 leading-tight">
+                      {item.ok ? 'Yes,' : 'No,'} <em className={item.ok ? 'text-green-700' : 'text-rose-500'}>{item.sub}</em>
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {sr.flags.length > 0 && (
+                <div>
+                  <p className="num-tag mb-3">ii · flags</p>
+                  <ul className="space-y-2">
+                    {sr.flags.map((f, i) => (
+                      <li key={i} className="font-display text-base text-ink-500 italic">— {f}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {sr.local_laws_notes && (
+                <div className="bg-rose-50/50 border-l-2 border-rose-500 px-5 py-4">
+                  <p className="num-tag text-rose-700 mb-1">iii · local notes</p>
+                  <p className="font-display text-base text-ink-500 italic leading-snug">{sr.local_laws_notes}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Sidebar: Emergency Contacts */}
-        <div className="lg:w-72 shrink-0">
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4 shadow-sm lg:sticky lg:top-24">
-            <h3 className="font-semibold text-red-800 flex items-center gap-2 mb-3">
-              <Phone size={15} className="text-red-500" />
-              Emergency Contacts
-            </h3>
-            <div className="space-y-2">
-              <div>
-                <p className="text-xs text-red-500 font-medium">Local Emergency</p>
-                <p className="text-sm font-bold text-red-800">{sr.emergency_number}</p>
+        <aside className="lg:col-span-4">
+          <div className="lg:sticky lg:top-32 space-y-8">
+            <div className="bg-rose-50/40 border-l-2 border-rose-500 px-6 py-6">
+              <div className="flex items-baseline justify-between mb-5">
+                <p className="num-tag text-rose-700">Emergency · keep close</p>
+                <Phone size={14} className="text-rose-500" />
               </div>
-              {Object.entries(tripData.emergency_contacts).map(([key, val]) => (
-                <div key={key} className="border-t border-red-100 pt-2">
-                  <p className="text-xs text-red-500 font-medium capitalize">{key.replace(/_/g, ' ')}</p>
-                  <p className="text-sm text-red-800">{val}</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs text-ink-300 uppercase tracking-wider mb-1">Local emergency</p>
+                  <p className="font-display text-3xl text-ink-500 tabular-nums">{sr.emergency_number}</p>
                 </div>
-              ))}
+                {Object.entries(tripData.emergency_contacts).map(([key, val]) => (
+                  <div key={key} className="border-t border-rose-100 pt-3">
+                    <p className="text-xs text-ink-300 uppercase tracking-wider mb-1">{key.replace(/_/g, ' ')}</p>
+                    <p className="font-display text-lg text-ink-500">{val}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   )

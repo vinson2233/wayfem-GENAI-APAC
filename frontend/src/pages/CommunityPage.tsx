@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { Search, Plus, X, AlertTriangle } from 'lucide-react'
+import { Search, Plus, X } from 'lucide-react'
 import { getCommunityTips } from '../api/client'
 import type { CommunityTip } from '../api/client'
 import CommunityTipCard from '../components/CommunityTipCard'
 
 type Category = CommunityTip['category'] | 'all'
 
-const CATEGORIES: { key: Category; label: string; icon: string }[] = [
-  { key: 'all', label: 'All', icon: '🌟' },
-  { key: 'transport', label: 'Transport', icon: '🚗' },
-  { key: 'accommodation', label: 'Stay', icon: '🏨' },
-  { key: 'food', label: 'Food', icon: '🍽' },
-  { key: 'nightlife', label: 'Nightlife', icon: '🌙' },
-  { key: 'emergency', label: 'Emergency', icon: '🚨' },
-  { key: 'general', label: 'General', icon: '💡' },
+const CATEGORIES: { key: Category; label: string }[] = [
+  { key: 'all', label: 'Everything' },
+  { key: 'transport', label: 'Transport' },
+  { key: 'accommodation', label: 'Stay' },
+  { key: 'food', label: 'Food' },
+  { key: 'nightlife', label: 'Nightlife' },
+  { key: 'emergency', label: 'Emergency' },
+  { key: 'general', label: 'General' },
 ]
 
 export default function CommunityPage() {
@@ -82,147 +82,155 @@ export default function CommunityPage() {
   const filtered = activeCategory === 'all' ? tips : tips.filter(t => t.category === activeCategory)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-12">
+      <header className="flex items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">👭 Community Wisdom</h1>
-          <p className="text-gray-500 text-sm">Safety tips from women who've been there</p>
+          <p className="eyebrow mb-3">№ 004 · Community wisdom</p>
+          <h1 className="display text-5xl lg:text-6xl text-ink-500 leading-[0.95] tracking-tight">
+            Whispers from
+            <br />
+            women who've
+            <br />
+            <em className="text-rose-500 font-normal">been there.</em>
+          </h1>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-safeher-600 text-white text-sm font-medium rounded-lg hover:bg-safeher-700 transition-colors"
+          className="btn-rose hidden md:inline-flex items-center gap-2 px-5 py-3 text-sm shrink-0"
         >
-          <Plus size={16} /> Share a Tip
+          <Plus size={15} /> Share a tip
         </button>
-      </div>
+      </header>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <form onSubmit={handleSearch} className="flex items-end gap-4 border-b border-[var(--hairline-strong)] pb-2">
+        <div className="flex-1 flex items-center gap-3">
+          <Search size={18} className="text-rose-500 shrink-0" />
           <input
             type="text"
             value={destination}
             onChange={e => setDestination(e.target.value)}
-            placeholder="Search tips for a destination"
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300"
+            placeholder="Search a destination..."
+            className="flex-1 bg-transparent border-0 py-2 text-lg font-display tracking-tight focus:outline-none placeholder:text-ink-300/60"
           />
         </div>
         <button
           type="submit"
           disabled={loading || !destination.trim()}
-          className="px-5 py-2.5 bg-safeher-600 text-white font-medium rounded-lg text-sm hover:bg-safeher-700 disabled:opacity-50"
+          className="btn-primary px-6 py-3 text-sm"
         >
-          {loading ? '...' : 'Search'}
+          {loading ? '...' : 'Listen'}
         </button>
       </form>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-lg p-3">
-          <AlertTriangle size={15} className="text-red-500" />
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <p className="text-sm text-rose-700 italic font-display border-l-2 border-rose-500 pl-3">{error}</p>
       )}
 
-      <div className="flex gap-1 overflow-x-auto pb-1">
-        {CATEGORIES.map(cat => (
+      <nav className="flex flex-wrap gap-1 border-b border-[var(--hairline)] pb-1">
+        {CATEGORIES.map((cat, i) => (
           <button
             key={cat.key}
             onClick={() => handleCategoryChange(cat.key)}
-            className={`flex items-center gap-1 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            className={`relative px-4 py-2 text-sm font-medium transition-colors ${
               activeCategory === cat.key
-                ? 'bg-safeher-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'text-ink-500'
+                : 'text-ink-300 hover:text-ink-500'
             }`}
           >
-            {cat.icon} {cat.label}
+            <span className="num-tag mr-1.5 text-rose-400">{String(i + 1).padStart(2, '0')}</span>
+            {cat.label}
+            {activeCategory === cat.key && (
+              <span className="absolute -bottom-[5px] left-0 right-0 h-px bg-rose-500" />
+            )}
           </button>
         ))}
-      </div>
+      </nav>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 rounded-full border-4 border-safeher-100 border-t-safeher-500 animate-spin" />
+        <div className="text-center py-20">
+          <span className="text-rose-300 text-3xl tracking-[0.4em]">✦ ✦ ✦</span>
+          <p className="text-sm text-ink-300 italic font-display mt-3">Listening...</p>
         </div>
       ) : searched ? (
         filtered.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-1 max-w-3xl">
             {filtered.map((tip, i) => <CommunityTipCard key={tip.tip_id ?? i} tip={tip} />)}
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-4xl mb-2">👭</p>
-            <p>No tips found. Be the first to share!</p>
+          <div className="text-center py-20">
+            <p className="font-display italic text-3xl text-ink-300 mb-2">No tips yet.</p>
+            <p className="text-sm text-ink-300">Be the first to share what you've learned.</p>
           </div>
         )
       ) : (
-        <div className="text-center py-12 text-gray-300">
-          <p className="text-5xl mb-3">💬</p>
-          <p className="text-gray-400">Search a destination to see community tips</p>
+        <div className="text-center py-24">
+          <p className="text-rose-300 text-3xl tracking-[0.4em] mb-4">✦</p>
+          <p className="font-display italic text-2xl text-ink-300">Where would you like to listen?</p>
         </div>
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Share a Safety Tip</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <X size={18} className="text-gray-500" />
+        <div className="fixed inset-0 bg-ink-500/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-bloom" onClick={() => setShowModal(false)}>
+          <div className="bg-cream-50 w-full max-w-md p-8 border border-[var(--hairline)]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-baseline justify-between mb-6">
+              <h3 className="display text-3xl text-ink-500 leading-tight">
+                Share a <em className="text-rose-500 font-normal">whisper</em>
+              </h3>
+              <button onClick={() => setShowModal(false)} className="text-ink-300 hover:text-ink-500">
+                <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleModalSubmit} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Destination</label>
+            <form onSubmit={handleModalSubmit} className="space-y-5">
+              <label className="block">
+                <span className="num-tag block mb-1">01 · destination</span>
                 <input
                   type="text"
                   value={modalDest || destination}
                   onChange={e => setModalDest(e.target.value)}
-                  placeholder="e.g. Tokyo, Japan"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300"
+                  placeholder="Tokyo, Japan"
+                  className="field"
                   required
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Category</label>
+              </label>
+              <label className="block">
+                <span className="num-tag block mb-1">02 · category</span>
                 <select
                   value={modalCategory}
                   onChange={e => setModalCategory(e.target.value as CommunityTip['category'])}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300"
+                  className="field"
                 >
                   {CATEGORIES.filter(c => c.key !== 'all').map(c => (
-                    <option key={c.key} value={c.key}>{c.icon} {c.label}</option>
+                    <option key={c.key} value={c.key}>{c.label}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Your Tip</label>
+              </label>
+              <label className="block">
+                <span className="num-tag block mb-1">03 · your tip</span>
                 <textarea
                   value={modalTip}
                   onChange={e => setModalTip(e.target.value)}
-                  placeholder="Share your safety tip or experience..."
-                  rows={3}
+                  placeholder="What do you wish you'd known before you went?"
+                  rows={4}
                   required
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300 resize-none"
+                  className="w-full bg-transparent border-0 border-b border-[var(--hairline-strong)] py-2 font-display text-base focus:outline-none focus:border-rose-500 resize-none placeholder:text-ink-300/60 placeholder:italic"
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Anonymous Alias <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
+              </label>
+              <label className="block">
+                <span className="num-tag block mb-1">04 · alias <span className="text-ink-300/70 italic">(optional)</span></span>
                 <input
                   type="text"
                   value={modalAlias}
                   onChange={e => setModalAlias(e.target.value)}
-                  placeholder="e.g. WanderlustWoman"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300"
+                  placeholder="WanderlustWoman"
+                  className="field"
                 />
-              </div>
+              </label>
               <button
                 type="submit"
                 disabled={modalSubmitting || !modalTip.trim()}
-                className="w-full py-2.5 bg-safeher-600 text-white font-medium rounded-lg text-sm hover:bg-safeher-700 disabled:opacity-50 transition-colors"
+                className="btn-primary w-full py-3 text-sm"
               >
-                {modalSubmitting ? 'Submitting...' : 'Share Tip'}
+                {modalSubmitting ? 'Sharing...' : 'Share whisper'}
               </button>
             </form>
           </div>
