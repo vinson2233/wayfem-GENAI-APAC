@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Plus, X } from 'lucide-react'
-import { getCommunityTips } from '../api/client'
+import { getAllCommunityTips, getCommunityTips } from '../api/client'
 import type { CommunityTip } from '../api/client'
 import CommunityTipCard from '../components/CommunityTipCard'
 
@@ -18,22 +18,38 @@ const CATEGORIES: { key: Category; label: string }[] = [
 
 export default function CommunityPage() {
   const [destination, setDestination] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [allTips, setAllTips] = useState<CommunityTip[]>([])
   const [tips, setTips] = useState<CommunityTip[]>([])
   const [activeCategory, setActiveCategory] = useState<Category>('all')
   const [searched, setSearched] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
   const [modalDest, setModalDest] = useState('')
+  const [modalLocation, setModalLocation] = useState('')
   const [modalCategory, setModalCategory] = useState<CommunityTip['category']>('general')
   const [modalTip, setModalTip] = useState('')
   const [modalAlias, setModalAlias] = useState('')
   const [modalSubmitting, setModalSubmitting] = useState(false)
 
+  useEffect(() => {
+    getAllCommunityTips()
+      .then(res => {
+        setAllTips(res.data)
+        setTips(res.data)
+      })
+      .catch(() => setError('Could not load community tips.'))
+      .finally(() => setLoading(false))
+  }, [])
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!destination.trim()) return
+    if (!destination.trim()) {
+      setSearched(false)
+      setTips(activeCategory === 'all' ? allTips : allTips.filter(t => t.category === activeCategory))
+      return
+    }
     setLoading(true)
     setError(null)
     setSearched(true)
@@ -47,17 +63,16 @@ export default function CommunityPage() {
     }
   }
 
-  const handleCategoryChange = async (cat: Category) => {
+  const handleCategoryChange = (cat: Category) => {
     setActiveCategory(cat)
-    if (!destination.trim() || !searched) return
-    setLoading(true)
-    try {
-      const res = await getCommunityTips(destination.trim(), cat !== 'all' ? cat : undefined)
-      setTips(res.data)
-    } catch {
-      setError('Could not load tips.')
-    } finally {
-      setLoading(false)
+    if (searched && destination.trim()) {
+      setLoading(true)
+      getCommunityTips(destination.trim(), cat !== 'all' ? cat : undefined)
+        .then(res => setTips(res.data))
+        .catch(() => setError('Could not load tips.'))
+        .finally(() => setLoading(false))
+    } else {
+      setTips(cat === 'all' ? allTips : allTips.filter(t => t.category === cat))
     }
   }
 
@@ -69,6 +84,7 @@ export default function CommunityPage() {
       author_alias: modalAlias || `Traveler_${Math.random().toString(36).slice(2, 6)}`,
       tip: modalTip,
       category: modalCategory,
+      location: modalLocation.trim() || null,
       upvotes: 0,
       created_at: new Date().toISOString(),
     }
@@ -151,21 +167,14 @@ export default function CommunityPage() {
           <span className="text-rose-300 text-3xl tracking-[0.4em]">✦ ✦ ✦</span>
           <p className="text-sm text-ink-300 italic font-display mt-3">Listening...</p>
         </div>
-      ) : searched ? (
-        filtered.length > 0 ? (
-          <div className="space-y-1 max-w-3xl">
-            {filtered.map((tip, i) => <CommunityTipCard key={tip.tip_id ?? i} tip={tip} />)}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="font-display italic text-3xl text-ink-300 mb-2">No tips yet.</p>
-            <p className="text-sm text-ink-300">Be the first to share what you've learned.</p>
-          </div>
-        )
+      ) : filtered.length > 0 ? (
+        <div className="space-y-1 max-w-3xl">
+          {filtered.map((tip, i) => <CommunityTipCard key={tip.tip_id ?? i} tip={tip} />)}
+        </div>
       ) : (
-        <div className="text-center py-24">
-          <p className="text-rose-300 text-3xl tracking-[0.4em] mb-4">✦</p>
-          <p className="font-display italic text-2xl text-ink-300">Where would you like to listen?</p>
+        <div className="text-center py-20">
+          <p className="font-display italic text-3xl text-ink-300 mb-2">No tips yet.</p>
+          <p className="text-sm text-ink-300">Be the first to share what you've learned.</p>
         </div>
       )}
 
@@ -193,7 +202,17 @@ export default function CommunityPage() {
                 />
               </label>
               <label className="block">
-                <span className="num-tag block mb-1">02 · category</span>
+                <span className="num-tag block mb-1">02 · specific area <span className="text-ink-300/70 italic">(optional)</span></span>
+                <input
+                  type="text"
+                  value={modalLocation}
+                  onChange={e => setModalLocation(e.target.value)}
+                  placeholder="Shinjuku, Montmartre, Old Town…"
+                  className="field"
+                />
+              </label>
+              <label className="block">
+                <span className="num-tag block mb-1">03 · category</span>
                 <select
                   value={modalCategory}
                   onChange={e => setModalCategory(e.target.value as CommunityTip['category'])}
@@ -205,7 +224,7 @@ export default function CommunityPage() {
                 </select>
               </label>
               <label className="block">
-                <span className="num-tag block mb-1">03 · your tip</span>
+                <span className="num-tag block mb-1">04 · your tip</span>
                 <textarea
                   value={modalTip}
                   onChange={e => setModalTip(e.target.value)}
@@ -216,7 +235,7 @@ export default function CommunityPage() {
                 />
               </label>
               <label className="block">
-                <span className="num-tag block mb-1">04 · alias <span className="text-ink-300/70 italic">(optional)</span></span>
+                <span className="num-tag block mb-1">05 · alias <span className="text-ink-300/70 italic">(optional)</span></span>
                 <input
                   type="text"
                   value={modalAlias}

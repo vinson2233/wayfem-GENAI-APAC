@@ -1,5 +1,8 @@
-import { Star, ExternalLink } from 'lucide-react'
+import { Star, ExternalLink, Info } from 'lucide-react'
 import type { Hotel } from '../api/client'
+
+const FFI_EXPLAINER =
+  'Female Friendliness Index — a 0–10 score from women-specific reviews, security features (door locks, lobby visibility), area safety, and female-staff signals.'
 
 interface HotelCardProps {
   hotel: Hotel
@@ -21,12 +24,19 @@ export default function HotelCard({ hotel }: HotelCardProps) {
           </div>
         )}
         {/* FFI floating badge */}
-        <div className="absolute top-3 left-3 bg-cream-50/95 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[var(--hairline)]">
-          <p className="text-[9px] uppercase tracking-[0.18em] text-ink-300">FFI</p>
+        <div className="absolute top-3 left-3 group/ffi bg-cream-50/95 backdrop-blur-sm px-3 py-1.5 rounded-full border border-[var(--hairline)] cursor-help">
+          <div className="flex items-baseline gap-1">
+            <p className="text-[9px] uppercase tracking-[0.18em] text-ink-300">FFI</p>
+            <Info size={9} className="text-ink-300" />
+          </div>
           <p className="font-display text-base text-ink-500 leading-none">
             {hotel.female_friendliness_score.toFixed(1)}
             <span className="text-[10px] text-ink-300 ml-0.5">/10</span>
           </p>
+          {/* Hover tooltip */}
+          <div className="invisible group-hover/ffi:visible opacity-0 group-hover/ffi:opacity-100 transition-opacity absolute top-full mt-2 left-0 w-64 bg-ink-500 text-cream-50 text-xs leading-relaxed font-display px-3 py-2 z-20 shadow-lg">
+            {FFI_EXPLAINER}
+          </div>
         </div>
         {hotel.owner_female === true && (
           <span className="absolute top-3 right-3 text-[10px] uppercase tracking-[0.16em] font-semibold bg-rose-500 text-cream-50 px-2.5 py-1 rounded-full">

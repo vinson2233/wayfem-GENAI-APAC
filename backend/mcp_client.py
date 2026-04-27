@@ -40,6 +40,23 @@ def _maps_search_config() -> dict:
     }
 
 
+def _reddit_config() -> dict:
+    """Config for Reddit MCP server (stdio, anonymous mode by default).
+
+    Used by the community agent to surface real tips from r/femaletravels and
+    r/solofemaletravellers. Anonymous mode (~10 req/min) is fine for our read-only use.
+    """
+    env = {**os.environ, "REDDIT_AUTH_MODE": "anonymous"}
+    return {
+        "safeher-reddit": {
+            "command": "npx",
+            "args": ["-y", "reddit-mcp-server"],
+            "transport": "stdio",
+            "env": env,
+        }
+    }
+
+
 def _calendar_config() -> dict:
     """Config for Calendar MCP server (streamable-http, optional)."""
     return {
@@ -96,4 +113,15 @@ async def get_calendar_tools():
         return await client.get_tools()
     except Exception as e:
         logger.warning(f"Calendar MCP unavailable: {e}")
+        return []
+
+
+async def get_reddit_tools():
+    """Fetch tools from the Reddit MCP server. Returns [] if unavailable so
+    callers can gracefully fall back without crashing the orchestrator."""
+    try:
+        client = MultiServerMCPClient(_reddit_config())
+        return await client.get_tools()
+    except Exception as e:
+        logger.warning(f"Reddit MCP unavailable: {e}")
         return []

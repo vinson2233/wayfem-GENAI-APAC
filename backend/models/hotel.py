@@ -6,6 +6,7 @@ class Hotel(BaseModel):
     place_id: str
     name: str
     destination_id: str
+    search_city: Optional[str] = None  # Which city's search returned this hotel (multi-city trips)
     female_friendliness_score: float  # 0-10
     solo_female_reviews_count: int
     positive_mentions: list[str]

@@ -21,3 +21,7 @@ class CommunityTip(BaseModel):
     category: TipCategory
     upvotes: int = 0
     created_at: Optional[datetime] = None
+    location: Optional[str] = None  # specific place/area e.g. "Shinjuku", "Montmartre", or None for country-level
+    source: Optional[str] = None        # "reddit" | "ai" | None — provenance of the tip
+    source_url: Optional[str] = None    # link back to the original Reddit thread, if applicable
+    source_subreddit: Optional[str] = None  # e.g. "solofemaletravellers"

@@ -18,7 +18,7 @@ async def checkin(trip_id: str):
             "status": "ok",
             "trip_id": trip_id,
             "checked_in_at": datetime.now(timezone.utc).isoformat(),
-            "message": "Check-in recorded successfully. Stay safe! 💚",
+            "message": "Check-in recorded successfully. Stay safe!",
         }
     except HTTPException:
         raise

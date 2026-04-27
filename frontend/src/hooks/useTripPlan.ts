@@ -1,91 +1,92 @@
 import { useState, useCallback } from 'react'
-import { planTrip } from '../api/client'
-import type { TripPlanRequest, TripPlanResponse } from '../api/client'
+import { planTripStream } from '../api/client'
+import type { TripPlanRequest, TripPlanResponse, AgentId } from '../api/client'
 
-export const PROGRESS_STEPS = [
-  {
-    label: '🔍 Safety Intelligence Agent',
-    agent: 'Safety Intelligence Agent',
-    details: [
-      'Querying travel.state.gov advisories...',
-      'Scanning solo female traveler safety reports...',
-      'Checking crime statistics & harassment incidents...',
-      'Reviewing local laws affecting women...',
-    ],
-  },
-  {
-    label: '🏨 Accommodation Agent',
-    agent: 'Accommodation Agent',
-    details: [
-      'Searching hotels via Google Maps...',
-      'Analyzing solo female traveler reviews...',
-      'Computing Female Friendliness Index scores...',
-      'Checking area safety & emergency proximity...',
-    ],
-  },
-  {
-    label: '👭 Community Agent',
-    agent: 'Community Agent',
-    details: [
-      'Querying community tips database...',
-      'Surfacing trusted transport recommendations...',
-      'Finding female-friendly cafes & workspaces...',
-      'Gathering neighborhood safety wisdom...',
-    ],
-  },
-  {
-    label: '📅 Schedule Agent',
-    agent: 'Schedule Agent',
-    details: [
-      'Mapping safe activity windows by threat level...',
-      'Building day-by-day itinerary...',
-      'Flagging high-risk activities...',
-      'Creating Google Calendar check-in events...',
-    ],
-  },
-]
+export interface AgentState {
+  status: 'idle' | 'running' | 'complete' | 'error'
+  logs: string[]
+  summary: string
+}
 
-interface UseTripPlanState {
-  loading: boolean
-  error: string | null
-  data: TripPlanResponse | null
-  progressStep: number
+export type AgentMap = Record<AgentId, AgentState>
+
+const AGENT_IDS: AgentId[] = ['safety', 'accommodation', 'community', 'schedule']
+
+const makeIdle = (): AgentState => ({ status: 'idle', logs: [], summary: '' })
+
+export const initialAgentMap: AgentMap = {
+  safety: makeIdle(),
+  accommodation: makeIdle(),
+  community: makeIdle(),
+  schedule: makeIdle(),
+  briefing: makeIdle(),
+  parse: makeIdle(),
 }
 
 export function useTripPlan() {
-  const [state, setState] = useState<UseTripPlanState>({
-    loading: false,
-    error: null,
-    data: null,
-    progressStep: 0,
-  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [agents, setAgents] = useState<AgentMap>(initialAgentMap)
+  const [parseLog, setParseLog] = useState<string[]>([])
 
   const execute = useCallback(async (req: TripPlanRequest): Promise<TripPlanResponse | null> => {
-    setState({ loading: true, error: null, data: null, progressStep: 0 })
+    setLoading(true)
+    setError(null)
+    setAgents(initialAgentMap)
+    setParseLog([])
 
-    const intervalId = setInterval(() => {
-      setState(prev => ({
-        ...prev,
-        progressStep: Math.min(prev.progressStep + 1, PROGRESS_STEPS.length - 1),
-      }))
-    }, 2000)
-
-    try {
-      const response = await planTrip(req)
-      clearInterval(intervalId)
-      setState({ loading: false, error: null, data: response.data, progressStep: PROGRESS_STEPS.length - 1 })
-      return response.data
-    } catch (err: unknown) {
-      clearInterval(intervalId)
-      const message = err instanceof Error ? err.message : 'Failed to plan trip. Please try again.'
-      setState({ loading: false, error: message, data: null, progressStep: 0 })
-      return null
-    }
+    return new Promise<TripPlanResponse | null>((resolve) => {
+      planTripStream(req, (event) => {
+        if (event.type === 'agent_start') {
+          const id = event.agent
+          if (!AGENT_IDS.includes(id as any)) return
+          setAgents(prev => ({
+            ...prev,
+            [id]: { ...prev[id], status: 'running' },
+          }))
+        } else if (event.type === 'agent_event') {
+          const id = event.agent
+          if (id === 'parse') {
+            setParseLog(prev => [...prev, event.message].slice(-6))
+            return
+          }
+          if (!AGENT_IDS.includes(id as any)) return
+          setAgents(prev => ({
+            ...prev,
+            [id]: {
+              ...prev[id],
+              logs: [...prev[id].logs, event.message].slice(-20),
+            },
+          }))
+        } else if (event.type === 'agent_complete') {
+          const id = event.agent
+          if (!AGENT_IDS.includes(id as any)) return
+          setAgents(prev => ({
+            ...prev,
+            [id]: { ...prev[id], status: 'complete', summary: event.summary },
+          }))
+        } else if (event.type === 'complete') {
+          setLoading(false)
+          resolve(event.result)
+        } else if (event.type === 'error') {
+          setLoading(false)
+          setError(event.message)
+          resolve(null)
+        }
+      }).catch((err: unknown) => {
+        setLoading(false)
+        setError(err instanceof Error ? err.message : 'Failed to plan trip. Please try again.')
+        resolve(null)
+      })
+    })
   }, [])
 
   const reset = useCallback(() => {
-    setState({ loading: false, error: null, data: null, progressStep: 0 })
+    setLoading(false)
+    setError(null)
+    setAgents(initialAgentMap)
+    setParseLog([])
   }, [])
 
-  return { ...state, execute, reset }
+  return { loading, error, agents, parseLog, execute, reset }
 }

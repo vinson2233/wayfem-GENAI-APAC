@@ -11,6 +11,8 @@ from routers.hotels import router as hotels_router
 from routers.checkin import router as checkin_router
 from routers.feedback import router as feedback_router
 from routers.community import router as community_router
+from routers.photos import router as photos_router
+from routers.ask import router as ask_router
 
 app = FastAPI(
     title="Wayfem Travel Planner API",
@@ -32,6 +34,8 @@ app.include_router(hotels_router)
 app.include_router(checkin_router)
 app.include_router(feedback_router)
 app.include_router(community_router)
+app.include_router(photos_router)
+app.include_router(ask_router)
 
 
 @app.get("/health")
