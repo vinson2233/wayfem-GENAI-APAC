@@ -13,6 +13,8 @@ You describe a trip in plain words. Wayfem turns it into a vetted, day-by-day it
 
 It's not a chatbot. It's a **5-agent system** with **5 MCP servers** connecting to real APIs (Google Maps, Serper, Reddit, Google Calendar, Serper Images), live-streamed over SSE, with a grounded RAG chat ("Ask Wayfem") that knows *your* trip.
 
+![](app_preview.png)
+
 ```
                 User describes trip →  /api/v1/plan/clarify  (LLM feasibility gate)
                                                     ↓
