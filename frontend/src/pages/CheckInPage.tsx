@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { Shield, CheckCircle, Phone, Clock, AlertTriangle } from 'lucide-react'
+import { Phone, AlertTriangle } from 'lucide-react'
 import { checkIn } from '../api/client'
 import { formatDistanceToNow, addHours } from 'date-fns'
 
@@ -39,100 +39,101 @@ export default function CheckInPage() {
   const isOverdue = nextCheckIn ? now > nextCheckIn : false
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1 flex items-center justify-center gap-2">
-          <Shield size={24} className="text-safeher-500" />
-          Safety Check-In
+    <div className="max-w-xl mx-auto space-y-12">
+      <header className="text-center">
+        <p className="eyebrow mb-3">Daily ritual</p>
+        <h1 className="display text-5xl lg:text-6xl text-ink-500 leading-[0.95] tracking-tight">
+          Tell us
+          <br />
+          you're <em className="text-rose-500 font-normal">safe</em>.
         </h1>
-        <p className="text-gray-500 text-sm">Trip ID: <span className="font-mono text-gray-600">{tripId}</span></p>
-      </div>
+        <p className="num-tag mt-4">Trip · {tripId}</p>
+      </header>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center space-y-4">
+      <div className="text-center">
         {success ? (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle size={40} className="text-green-500" />
-            </div>
-            <h2 className="text-xl font-bold text-green-700">You're Checked In!</h2>
-            <p className="text-sm text-gray-500">Stay safe. Next check-in in 24 hours.</p>
+          <div className="space-y-4 animate-bloom">
+            <span className="text-rose-300 text-4xl tracking-[0.5em]">✦ ✦ ✦</span>
+            <h2 className="display text-4xl text-ink-500">
+              You're <em className="text-green-700 font-normal">safe</em>.
+            </h2>
+            <p className="text-sm text-ink-300 italic font-display">Next check-in in 24 hours. Travel beautifully.</p>
           </div>
         ) : (
-          <>
-            <div className="flex justify-center">
-              <button
-                onClick={handleCheckIn}
-                disabled={loading}
-                className="w-40 h-40 rounded-full bg-gradient-to-br from-safeher-500 to-safeher-700 text-white font-bold text-lg shadow-xl hover:from-safeher-600 hover:to-safeher-800 disabled:opacity-50 transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-2"
-              >
+          <div className="space-y-6">
+            <button
+              onClick={handleCheckIn}
+              disabled={loading}
+              className="group relative w-56 h-56 rounded-full bg-rose-500 hover:bg-rose-700 disabled:opacity-60 transition-all duration-500 hover:scale-[1.03] active:scale-95 mx-auto"
+              style={{ boxShadow: '0 30px 60px -20px rgba(207, 111, 104, 0.4)' }}
+            >
+              {/* Concentric pulse rings */}
+              <span className="absolute inset-0 rounded-full bg-rose-500/30 animate-ping" />
+              <span className="absolute inset-3 rounded-full border border-cream-50/30" />
+              <span className="absolute inset-7 rounded-full border border-cream-50/20" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-cream-50">
                 {loading ? (
-                  <div className="w-8 h-8 rounded-full border-4 border-white/30 border-t-white animate-spin" />
+                  <div className="w-10 h-10 rounded-full border-2 border-cream-50/30 border-t-cream-50 animate-spin" />
                 ) : (
                   <>
-                    <Shield size={36} />
-                    <span>I'm Safe</span>
-                    <span className="text-xs font-normal opacity-80">Check In</span>
+                    <span className="font-display text-5xl italic leading-none">I'm</span>
+                    <span className="font-display text-6xl leading-none mt-1">safe.</span>
+                    <span className="text-[10px] uppercase tracking-[0.3em] mt-3 opacity-80">Tap to confirm</span>
                   </>
                 )}
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">Tap to confirm you're safe</p>
-          </>
+              </div>
+            </button>
+            <p className="text-sm text-ink-300 italic font-display">Check in once a day · we'll alert your contact if you don't</p>
+          </div>
         )}
 
         {error && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-lg p-3 text-left">
-            <AlertTriangle size={15} className="text-red-500 shrink-0" />
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
+          <p className="text-sm text-rose-700 italic font-display border-l-2 border-rose-500 pl-3 mt-6 text-left">{error}</p>
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
-        <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-          <Clock size={16} className="text-safeher-500" />
-          Check-In Status
-        </h3>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Last Check-In</span>
-            <span className="font-medium text-gray-700">
-              {lastCheckIn ? formatDistanceToNow(lastCheckIn, { addSuffix: true }) : 'Not yet checked in'}
-            </span>
+      <div className="border-t border-[var(--hairline)] pt-8">
+        <p className="num-tag mb-5">Status</p>
+        <dl className="space-y-3">
+          <div className="flex items-baseline justify-between border-b border-[var(--hairline)] pb-3">
+            <dt className="text-sm text-ink-300">Last check-in</dt>
+            <dd className="font-display text-lg text-ink-500">
+              {lastCheckIn ? formatDistanceToNow(lastCheckIn, { addSuffix: true }) : 'Not yet'}
+            </dd>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Next Required</span>
-            <span className={`font-medium ${isOverdue ? 'text-red-600' : 'text-gray-700'}`}>
+          <div className="flex items-baseline justify-between">
+            <dt className="text-sm text-ink-300">Next required</dt>
+            <dd className={`font-display text-lg ${isOverdue ? 'text-rose-700' : 'text-ink-500'}`}>
               {nextCheckIn
-                ? `${formatDistanceToNow(nextCheckIn, { addSuffix: true })}${isOverdue ? ' — OVERDUE' : ''}`
+                ? `${formatDistanceToNow(nextCheckIn, { addSuffix: true })}${isOverdue ? ' · overdue' : ''}`
                 : 'Every 24 hours'}
-            </span>
+            </dd>
           </div>
-        </div>
+        </dl>
         {isOverdue && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-lg p-2 mt-1">
-            <AlertTriangle size={13} className="text-red-500 shrink-0" />
-            <p className="text-xs text-red-700">Your check-in is overdue! Please check in now.</p>
+          <div className="flex items-center gap-2 bg-rose-50 border-l-2 border-rose-700 px-3 py-2.5 mt-4">
+            <AlertTriangle size={14} className="text-rose-700 shrink-0" />
+            <p className="text-sm text-rose-800 italic font-display">Overdue. Check in now or message your contact.</p>
           </div>
         )}
       </div>
 
-      <div className="bg-red-50 border border-red-100 rounded-xl p-4">
-        <h3 className="font-semibold text-red-800 flex items-center gap-2 mb-3">
-          <Phone size={15} className="text-red-500" />
-          Emergency Contacts
-        </h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-red-600">Local Emergency</span>
-            <span className="font-bold text-red-800">112</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-red-600">Police</span>
-            <span className="font-bold text-red-800">110</span>
-          </div>
-          <p className="text-xs text-red-400 mt-2">Save these numbers before you go out</p>
+      <div className="border-t border-[var(--hairline)] pt-8">
+        <div className="flex items-baseline justify-between mb-5">
+          <p className="num-tag">Emergency · keep close</p>
+          <Phone size={14} className="text-rose-500" />
         </div>
+        <dl className="space-y-3">
+          {[
+            { label: 'Local emergency', value: '112' },
+            { label: 'Police', value: '110' },
+          ].map(item => (
+            <div key={item.label} className="flex items-baseline justify-between">
+              <dt className="text-sm text-ink-300">{item.label}</dt>
+              <dd className="font-display text-2xl text-ink-500 tabular-nums">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </div>
   )

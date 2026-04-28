@@ -103,6 +103,22 @@ async def get_community_tips(destination_id: str) -> list[CommunityTip]:
         return []
 
 
+async def get_all_community_tips(limit: int = 100) -> list[CommunityTip]:
+    try:
+        client = get_client()
+        col_ref = client.collection(_col("community_tips"))
+        docs = await col_ref.order_by("upvotes", direction=firestore.Query.DESCENDING).limit(limit).get()
+        tips = []
+        for doc in docs:
+            data = doc.to_dict()
+            data["tip_id"] = doc.id
+            tips.append(CommunityTip(**data))
+        return tips
+    except Exception as e:
+        logger.error(f"Error fetching all community tips: {e}")
+        return []
+
+
 async def save_community_tip(tip: CommunityTip) -> None:
     try:
         client = get_client()

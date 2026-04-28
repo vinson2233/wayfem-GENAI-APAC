@@ -28,6 +28,11 @@ RUN apt-get update && apt-get install -y curl && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Pre-install Reddit MCP server globally so the community agent can spawn it
+# instantly via `npx reddit-mcp-server` without download-on-first-use latency.
+RUN npm install -g reddit-mcp-server@latest && \
+    echo "reddit-mcp-server installed: $(npm ls -g reddit-mcp-server --depth=0 2>/dev/null | grep reddit-mcp || echo 'NOT FOUND')"
+
 WORKDIR /app
 
 # Install Python dependencies

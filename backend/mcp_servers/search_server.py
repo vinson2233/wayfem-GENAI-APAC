@@ -18,6 +18,7 @@ from tools.search_tool import (
     search_travel_safety,
     search_hotel_reviews,
     search_travel_advisory,
+    search_emergency_numbers,
 )
 
 mcp = FastMCP("SafeHer Search")
@@ -53,6 +54,17 @@ async def search_advisory(destination: str) -> str:
     Use this to find State Department / FCO advisories and active alerts.
     """
     results = await search_travel_advisory(destination)
+    return json.dumps(results)
+
+
+@mcp.tool()
+async def search_emergency(country: str, city: str = "") -> str:
+    """
+    Search for OFFICIAL emergency telephone numbers (police, ambulance, fire) for a country.
+    Biased to Wikipedia and .gov sources to avoid LLM hallucination.
+    Returns JSON array of search results with: title, snippet, link.
+    """
+    results = await search_emergency_numbers(country, city)
     return json.dumps(results)
 
 

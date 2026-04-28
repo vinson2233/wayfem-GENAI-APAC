@@ -17,6 +17,26 @@ def get_gmaps() -> googlemaps.Client:
     return _gmaps_client
 
 
+def geocode_place_id(query: str) -> Optional[str]:
+    """Return the Google place_id for a free-form query, or None if not found."""
+    try:
+        gmaps = get_gmaps()
+        results = gmaps.geocode(query)
+        if results:
+            return results[0].get("place_id")
+        # Fallback to text search via places API
+        try:
+            ts = gmaps.find_place(input=query, input_type="textquery", fields=["place_id"])
+            cands = ts.get("candidates", [])
+            if cands:
+                return cands[0].get("place_id")
+        except Exception:
+            pass
+    except Exception as e:
+        logger.warning(f"geocode_place_id failed for '{query}': {e}")
+    return None
+
+
 def geocode_destination(destination: str) -> dict:
     """Geocode via googlemaps SDK (sync, used in orchestrator setup)."""
     try:
@@ -100,6 +120,84 @@ def _haversine_m(lat1, lng1, lat2, lng2) -> float:
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+def get_distance_matrix(origins: list[str], destinations: list[str], mode: str = "transit") -> list[int | None]:
+    """Return travel time in minutes for each (origin, destination) pair.
+
+    Returns a flat list of Optional[int] — one value per pair, in order.
+    None means the route could not be calculated.
+    mode: 'transit' | 'driving' | 'walking'
+    """
+    try:
+        gmaps = get_gmaps()
+        result = gmaps.distance_matrix(origins, destinations, mode=mode)
+        times: list[int | None] = []
+        for row in result.get("rows", []):
+            for element in row.get("elements", []):
+                if element.get("status") == "OK":
+                    duration_sec = element["duration"]["value"]
+                    times.append(max(1, round(duration_sec / 60)))
+                else:
+                    times.append(None)
+        return times
+    except Exception as e:
+        logger.error(f"Distance matrix error: {e}")
+        return [None] * (len(origins))
+
+
+def get_pairwise_transport(
+    origin: str, destination: str
+) -> Optional[dict]:
+    """Pick the best transport mode between two locations.
+
+    Returns dict with: mode, duration_min, distance_m. Or None on failure.
+    Heuristic:
+      - distance ≤ 1.2 km → walking
+      - distance ≤ 8 km   → transit (fall back to driving if no transit route)
+      - distance > 8 km   → driving (treat as rideshare in UI)
+    """
+    try:
+        gmaps = get_gmaps()
+        # Driving query gives us reliable distance + duration in one call
+        drv = gmaps.distance_matrix([origin], [destination], mode="driving").get("rows", [])
+        elt = drv[0]["elements"][0] if drv and drv[0].get("elements") else {}
+        if elt.get("status") != "OK":
+            return None
+        distance_m = int(elt["distance"]["value"])
+        driving_min = max(1, round(elt["duration"]["value"] / 60))
+
+        # Walking under ~1.2 km
+        if distance_m <= 1200:
+            walk = gmaps.distance_matrix([origin], [destination], mode="walking").get("rows", [])
+            walk_elt = walk[0]["elements"][0] if walk and walk[0].get("elements") else {}
+            if walk_elt.get("status") == "OK":
+                return {
+                    "mode": "walking",
+                    "duration_min": max(1, round(walk_elt["duration"]["value"] / 60)),
+                    "distance_m": distance_m,
+                }
+
+        # Transit if reasonable distance
+        if distance_m <= 8000:
+            tr = gmaps.distance_matrix([origin], [destination], mode="transit").get("rows", [])
+            tr_elt = tr[0]["elements"][0] if tr and tr[0].get("elements") else {}
+            if tr_elt.get("status") == "OK":
+                return {
+                    "mode": "transit",
+                    "duration_min": max(1, round(tr_elt["duration"]["value"] / 60)),
+                    "distance_m": distance_m,
+                }
+
+        # Otherwise driving / rideshare
+        return {
+            "mode": "rideshare" if distance_m > 1500 else "driving",
+            "duration_min": driving_min,
+            "distance_m": distance_m,
+        }
+    except Exception as e:
+        logger.warning(f"get_pairwise_transport failed for '{origin}' → '{destination}': {e}")
+        return None
+
+
 def get_area_safety_info(lat: float, lng: float) -> dict:
     try:
         gmaps = get_gmaps()
@@ -107,14 +205,34 @@ def get_area_safety_info(lat: float, lng: float) -> dict:
         hospitals = gmaps.places_nearby(location=location, radius=3000, type="hospital").get("results", [])
         police = gmaps.places_nearby(location=location, radius=3000, type="police").get("results", [])
 
-        def nearest_distance(places):
+        def _nearest_with_distance(places: list[dict]):
+            """Sort by distance from (lat, lng) and return (place_dict, distance_m) of closest."""
             if not places:
-                return None
-            loc = places[0].get("geometry", {}).get("location", {})
-            return _haversine_m(lat, lng, loc["lat"], loc["lng"]) if loc else None
+                return None, None
+            scored = []
+            for p in places:
+                loc = p.get("geometry", {}).get("location", {})
+                if "lat" in loc and "lng" in loc:
+                    d = _haversine_m(lat, lng, loc["lat"], loc["lng"])
+                    scored.append((p, d))
+            if not scored:
+                return None, None
+            scored.sort(key=lambda x: x[1])
+            return scored[0]
 
-        hospital_distance = nearest_distance(hospitals)
-        police_distance = nearest_distance(police)
+        nearest_hospital, hospital_distance = _nearest_with_distance(hospitals)
+        nearest_police, police_distance = _nearest_with_distance(police)
+
+        def _to_place(place: Optional[dict], distance: Optional[float]) -> Optional[dict]:
+            if not place:
+                return None
+            return {
+                "name": place.get("name", ""),
+                "address": place.get("vicinity") or place.get("formatted_address", ""),
+                "place_id": place.get("place_id"),
+                "distance_meters": round(distance) if distance is not None else None,
+            }
+
         safety_score = 5.0
         for dist in [hospital_distance, police_distance]:
             if dist is not None:
@@ -125,8 +243,18 @@ def get_area_safety_info(lat: float, lng: float) -> dict:
             "police_stations_count": len(police),
             "nearest_hospital_m": round(hospital_distance) if hospital_distance else None,
             "nearest_police_m": round(police_distance) if police_distance else None,
+            "nearest_hospital_place": _to_place(nearest_hospital, hospital_distance),
+            "nearest_police_place": _to_place(nearest_police, police_distance),
             "area_safety_score": round(min(safety_score, 10.0), 1),
         }
     except Exception as e:
         logger.error(f"Area safety info error at ({lat},{lng}): {e}")
-        return {"hospitals_count": 0, "police_stations_count": 0, "nearest_hospital_m": None, "nearest_police_m": None, "area_safety_score": 5.0}
+        return {
+            "hospitals_count": 0,
+            "police_stations_count": 0,
+            "nearest_hospital_m": None,
+            "nearest_police_m": None,
+            "nearest_hospital_place": None,
+            "nearest_police_place": None,
+            "area_safety_score": 5.0,
+        }

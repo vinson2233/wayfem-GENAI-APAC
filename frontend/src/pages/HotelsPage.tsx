@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, SlidersHorizontal, AlertTriangle } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { getHotels } from '../api/client'
 import type { Hotel } from '../api/client'
 import HotelCard from '../components/HotelCard'
@@ -43,105 +43,120 @@ export default function HotelsPage() {
     })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">🏨 Female-Friendly Hotels</h1>
-        <p className="text-gray-500 text-sm">Find accommodations vetted for solo female travelers</p>
-      </div>
+    <div className="space-y-12">
+      <header>
+        <p className="eyebrow mb-3">№ 003 · Curated stays</p>
+        <h1 className="display text-5xl lg:text-6xl text-ink-500 leading-[0.95] tracking-tight">
+          Rooms that
+          <br />
+          <em className="text-rose-500 font-normal">care</em> who walks in.
+        </h1>
+        <p className="text-ink-400 mt-4 max-w-xl leading-relaxed">
+          Every property scored by our Female Friendliness Index — door security,
+          lobby visibility, neighborhood at night, the things that matter at 11pm.
+        </p>
+      </header>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      <form onSubmit={handleSearch} className="flex items-end gap-4 border-b border-[var(--hairline-strong)] pb-2">
+        <div className="flex-1 flex items-center gap-3">
+          <Search size={18} className="text-rose-500 shrink-0" />
           <input
             type="text"
             value={destination}
             onChange={e => setDestination(e.target.value)}
-            placeholder="Search hotels by destination"
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300"
+            placeholder="Where are you sleeping tonight?"
+            className="flex-1 bg-transparent border-0 py-2 text-lg font-display tracking-tight focus:outline-none placeholder:text-ink-300/60"
           />
         </div>
         <button
           type="submit"
           disabled={loading || !destination.trim()}
-          className="px-5 py-2.5 bg-safeher-600 text-white font-medium rounded-lg text-sm hover:bg-safeher-700 disabled:opacity-50 transition-colors"
+          className="btn-primary px-6 py-3 text-sm"
         >
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? 'Searching...' : 'Find'}
         </button>
       </form>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-lg p-3">
-          <AlertTriangle size={15} className="text-red-500" />
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <p className="text-sm text-rose-700 italic font-display border-l-2 border-rose-500 pl-3">{error}</p>
       )}
 
-      {searched && !loading && (
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="lg:w-56 shrink-0">
-            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <h3 className="font-semibold text-gray-700 flex items-center gap-2 mb-4">
-                <SlidersHorizontal size={15} />
-                Filters
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">
-                    Min FFI Score: <span className="text-safeher-600 font-bold">{minFFI}</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="10"
-                    step="0.5"
-                    value={minFFI}
-                    onChange={e => setMinFFI(Number(e.target.value))}
-                    className="w-full accent-safeher-500"
-                  />
+      {searched && (
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Filters sidebar */}
+          <aside className="lg:w-60 shrink-0">
+            <div className="lg:sticky lg:top-32 space-y-8">
+              <div>
+                <p className="eyebrow mb-4">Filters</p>
+                <div className="hairline" />
+              </div>
+
+              <div>
+                <div className="flex items-baseline justify-between mb-3">
+                  <span className="num-tag">Min · FFI</span>
+                  <span className="font-display text-xl text-rose-500">{minFFI.toFixed(1)}</span>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">
-                    Max Price: <span className="text-safeher-600 font-bold">${maxPrice}</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1000"
-                    step="10"
-                    value={maxPrice}
-                    onChange={e => setMaxPrice(Number(e.target.value))}
-                    className="w-full accent-safeher-500"
-                  />
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  step="0.5"
+                  value={minFFI}
+                  onChange={e => setMinFFI(Number(e.target.value))}
+                  className="w-full accent-rose-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-baseline justify-between mb-3">
+                  <span className="num-tag">Max · per night</span>
+                  <span className="font-display text-xl text-rose-500">${maxPrice}</span>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">Sort by</label>
-                  <select
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value as SortKey)}
-                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-safeher-300"
-                  >
-                    <option value="ffi">FFI Score (Best First)</option>
-                    <option value="rating">Rating</option>
-                    <option value="price">Price (Lowest First)</option>
-                  </select>
-                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1000"
+                  step="10"
+                  value={maxPrice}
+                  onChange={e => setMaxPrice(Number(e.target.value))}
+                  className="w-full accent-rose-500"
+                />
+              </div>
+
+              <div>
+                <p className="num-tag mb-2">Sort by</p>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value as SortKey)}
+                  className="w-full bg-transparent border-0 border-b border-[var(--hairline-strong)] py-2 font-display text-lg focus:outline-none focus:border-rose-500"
+                >
+                  <option value="ffi">FFI score</option>
+                  <option value="rating">Star rating</option>
+                  <option value="price">Lowest price</option>
+                </select>
               </div>
             </div>
-          </div>
+          </aside>
 
           <div className="flex-1">
             {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="w-8 h-8 rounded-full border-4 border-safeher-100 border-t-safeher-500 animate-spin" />
+              <div className="text-center py-20">
+                <span className="text-rose-300 text-3xl tracking-[0.4em]">✦ ✦ ✦</span>
+                <p className="text-sm text-ink-300 italic font-display mt-3">Knocking on doors...</p>
               </div>
             ) : filteredSorted.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredSorted.map(hotel => <HotelCard key={hotel.place_id} hotel={hotel} />)}
-              </div>
+              <>
+                <div className="flex items-baseline justify-between mb-6">
+                  <p className="num-tag">{filteredSorted.length} stays found</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredSorted.map(hotel => <HotelCard key={hotel.place_id} hotel={hotel} />)}
+                </div>
+              </>
             ) : (
-              <div className="text-center py-12 text-gray-400">
-                <p className="text-4xl mb-2">🏨</p>
-                <p>No hotels match your filters. Try adjusting them.</p>
+              <div className="text-center py-20 text-ink-300">
+                <p className="font-display text-3xl italic mb-2">Nothing matches.</p>
+                <p className="text-sm">Loosen the filters or try a different destination.</p>
               </div>
             )}
           </div>
