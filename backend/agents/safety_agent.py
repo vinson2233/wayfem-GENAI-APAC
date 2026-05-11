@@ -116,7 +116,7 @@ async def run_safety_agent(
         )
 
         # Larger budget — recent_incidents + crisis_contacts add significant output
-        llm = ChatGoogleGenerativeAI(google_api_key=settings.GEMINI_API_KEY, model="gemini-3-flash-preview", temperature=0.1, max_tokens=6144)
+        llm = ChatGoogleGenerativeAI(google_api_key=settings.GEMINI_API_KEY, model="gemini-3-flash-preview", temperature=0.1, max_output_tokens=6144)
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=human_content),

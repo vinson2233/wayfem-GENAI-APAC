@@ -154,7 +154,7 @@ async def clarify_trip_endpoint(request: ClarifyRequest):
             google_api_key=settings.GEMINI_API_KEY,
             model="gemini-3-flash-preview",
             temperature=0.5,
-            max_tokens=2048,
+            max_output_tokens=2048,
         )
         structured_llm = llm.with_structured_output(ClarifyResult)
         human = (

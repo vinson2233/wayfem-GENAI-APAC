@@ -17,6 +17,29 @@ def get_gmaps() -> googlemaps.Client:
     return _gmaps_client
 
 
+def _reset_gmaps() -> googlemaps.Client:
+    """Force-create a fresh client (call after SSL/connection errors)."""
+    global _gmaps_client
+    _gmaps_client = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
+    return _gmaps_client
+
+
+def _gmaps_call(fn, *args, **kwargs):
+    """Call a googlemaps SDK method; on SSL/connection error reset the client and retry once."""
+    import ssl
+    from requests.exceptions import SSLError as RequestsSSLError, ConnectionError as RequestsConnError
+    try:
+        return fn(*args, **kwargs)
+    except (ssl.SSLError, RequestsSSLError, RequestsConnError) as e:
+        logger.warning(f"Maps SSL/connection error, resetting client and retrying: {e}")
+        _reset_gmaps()
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e2:
+            logger.error(f"Maps retry also failed: {e2}")
+            raise
+
+
 def geocode_place_id(query: str) -> Optional[str]:
     """Return the Google place_id for a free-form query, or None if not found."""
     try:
@@ -158,7 +181,7 @@ def get_pairwise_transport(
     try:
         gmaps = get_gmaps()
         # Driving query gives us reliable distance + duration in one call
-        drv = gmaps.distance_matrix([origin], [destination], mode="driving").get("rows", [])
+        drv = _gmaps_call(gmaps.distance_matrix, [origin], [destination], mode="driving").get("rows", [])
         elt = drv[0]["elements"][0] if drv and drv[0].get("elements") else {}
         if elt.get("status") != "OK":
             return None
@@ -167,7 +190,7 @@ def get_pairwise_transport(
 
         # Walking under ~1.2 km
         if distance_m <= 1200:
-            walk = gmaps.distance_matrix([origin], [destination], mode="walking").get("rows", [])
+            walk = _gmaps_call(gmaps.distance_matrix, [origin], [destination], mode="walking").get("rows", [])
             walk_elt = walk[0]["elements"][0] if walk and walk[0].get("elements") else {}
             if walk_elt.get("status") == "OK":
                 return {
@@ -178,7 +201,7 @@ def get_pairwise_transport(
 
         # Transit if reasonable distance
         if distance_m <= 8000:
-            tr = gmaps.distance_matrix([origin], [destination], mode="transit").get("rows", [])
+            tr = _gmaps_call(gmaps.distance_matrix, [origin], [destination], mode="transit").get("rows", [])
             tr_elt = tr[0]["elements"][0] if tr and tr[0].get("elements") else {}
             if tr_elt.get("status") == "OK":
                 return {

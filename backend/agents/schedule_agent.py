@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 from typing import Optional, Any
 from datetime import datetime, timedelta
 
@@ -159,6 +160,36 @@ def _fallback_itinerary(start_date: str, end_date: str, destination: str, threat
     return days
 
 
+def _salvage_json_array(raw: str) -> list | None:
+    """Recover complete top-level day objects from a truncated JSON array.
+
+    Forward-scans for balanced { } pairs at depth-0 (i.e. each day object),
+    strips trailing commas inside each chunk, and returns whatever parsed
+    successfully. Same approach used by the accommodation agent.
+    """
+    results = []
+    depth = 0
+    start = -1
+    for i, ch in enumerate(raw):
+        if ch == '{':
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0 and start >= 0:
+                chunk = raw[start:i + 1]
+                chunk = re.sub(r',\s*([}\]])', r'\1', chunk)
+                try:
+                    obj = json.loads(chunk)
+                    if isinstance(obj, dict):
+                        results.append(obj)
+                except json.JSONDecodeError:
+                    pass
+                start = -1
+    return results if results else None
+
+
 async def run_schedule_agent(
     destination: str,
     trip_id: str,
@@ -260,7 +291,7 @@ async def run_schedule_agent(
                 if active_prefs:
                     emitter.emit("schedule", f"Applying preferences: {', '.join(active_prefs)}")
             emitter.emit("schedule", "Generating itinerary with Gemini…")
-        llm = ChatGoogleGenerativeAI(google_api_key=settings.GEMINI_API_KEY, model="gemini-3-flash-preview", temperature=0.3, max_tokens=16384)
+        llm = ChatGoogleGenerativeAI(google_api_key=settings.GEMINI_API_KEY, model="gemini-3-flash-preview", temperature=0.3, max_output_tokens=32768)
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=human_content),
@@ -275,7 +306,24 @@ async def run_schedule_agent(
                 raw = raw[4:]
             raw = raw.strip()
 
-        days_data = json.loads(raw)
+        # Strip trailing comma at EOF (truncated response) or before ] / }
+        raw = raw.rstrip()
+        if raw.endswith(','):
+            raw = raw[:-1]
+        raw = re.sub(r',\s*([}\]])', r'\1', raw)
+
+        try:
+            days_data = json.loads(raw)
+        except json.JSONDecodeError as je:
+            logger.error(f"Schedule agent JSON parse failed: {je}\nRaw response (first 2000 chars):\n{raw[:2000]}\n...last 500 chars:\n{raw[-500:]}")
+            # Brace-walker salvage: truncated JSON often ends mid-string/mid-object.
+            # Walk backwards to find the last complete day object and close the array.
+            salvaged = _salvage_json_array(raw)
+            if salvaged:
+                logger.warning(f"Salvaged {len(salvaged)} day(s) from truncated response")
+                days_data = salvaged
+            else:
+                raise
         itinerary_days = []
 
         def _parse_item(item: dict, include_alternatives: bool = True) -> ItineraryItem:
@@ -448,6 +496,8 @@ async def run_schedule_agent(
         return itinerary_days, calendar_id
 
     except Exception as e:
-        logger.error(f"Schedule agent error for '{destination}': {e}")
+        logger.error(f"Schedule agent error for '{destination}': {e}", exc_info=True)
+        if emitter:
+            emitter.emit("schedule", f"⚠ Schedule agent error — using fallback: {type(e).__name__}: {e}")
         fallback = _fallback_itinerary(start_date, end_date, destination, safety_report.threat_level)
         return fallback, None

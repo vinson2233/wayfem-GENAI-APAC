@@ -166,7 +166,7 @@ async def ask_wayfem(req: AskRequest):
             google_api_key=settings.GEMINI_API_KEY,
             model="gemini-3-flash-preview",
             temperature=0.4,
-            max_tokens=1024,
+            max_output_tokens=1024,
         )
         response = await llm.ainvoke(messages)
 
