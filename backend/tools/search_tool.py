@@ -165,7 +165,7 @@ async def search_travel_safety_local(destination: str, country: str) -> list[dic
             google_api_key=settings.GEMINI_API_KEY,
             model="gemini-3.1-flash-lite-preview",
             temperature=0,
-            max_tokens=100,
+            max_output_tokens=100,
         )
         prompt = (
             f"Translate ONLY this search query into {language_name}. "

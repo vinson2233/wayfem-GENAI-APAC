@@ -199,6 +199,10 @@ step_prerequisites() {
     secretmanager.googleapis.com \
     firestore.googleapis.com \
     generativelanguage.googleapis.com \
+    maps-backend.googleapis.com \
+    places-backend.googleapis.com \
+    geocoding-backend.googleapis.com \
+    distance-matrix-backend.googleapis.com \
     --project "$PROJECT_ID" --quiet
 
   if ! gcloud artifacts repositories describe "$REPO" \

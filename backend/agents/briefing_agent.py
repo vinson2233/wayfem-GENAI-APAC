@@ -71,7 +71,7 @@ async def run_briefing_agent(
             google_api_key=settings.GEMINI_API_KEY,
             model="gemini-3-flash-preview",
             temperature=0.3,
-            max_tokens=4096,
+            max_output_tokens=8192,
         )
         structured = llm.with_structured_output(TripBriefing)
         result: TripBriefing = await structured.ainvoke([

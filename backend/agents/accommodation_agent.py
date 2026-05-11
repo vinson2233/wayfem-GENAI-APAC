@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -105,7 +106,7 @@ async def run_accommodation_agent(
         if emitter:
             emitter.emit("accommodation", "Scoring solo female reviews with Gemini…")
         # Multi-city searches can produce 20-30 hotels — bump tokens to avoid truncation
-        llm = ChatGoogleGenerativeAI(google_api_key=settings.GEMINI_API_KEY, model="gemini-3-flash-preview", temperature=0.1, max_tokens=12288)
+        llm = ChatGoogleGenerativeAI(google_api_key=settings.GEMINI_API_KEY, model="gemini-3-flash-preview", temperature=0.1, max_output_tokens=12288)
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(content=human_content),
@@ -133,6 +134,9 @@ async def run_accommodation_agent(
             if raw_text.startswith("json"):
                 raw_text = raw_text[4:]
             raw_text = raw_text.strip()
+
+        # Strip trailing commas — Gemini sometimes emits JS-style JSON
+        raw_text = re.sub(r',\s*([}\]])', r'\1', raw_text)
 
         # Try strict parse first; if that fails (truncation, partial JSON), salvage
         # whatever hotel objects we can so we don't lose the entire batch.

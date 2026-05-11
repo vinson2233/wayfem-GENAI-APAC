@@ -111,7 +111,7 @@ async def run_community_agent(destination_id: str, destination: str) -> list[Com
             google_api_key=settings.GEMINI_API_KEY,
             model="gemini-3-flash-preview",
             temperature=0.4,
-            max_tokens=4096,
+            max_output_tokens=4096,
         )
         messages = [
             SystemMessage(content=SYSTEM_PROMPT),
